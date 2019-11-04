@@ -1,0 +1,37 @@
+{
+  "generator-jhipster": {
+    "promptValues": {
+      "packageName": "com.easygo"
+    },
+    "jhipsterVersion": "6.0.0",
+    "applicationType": "monolith",
+    "baseName": "easygo",
+    "packageName": "com.easygo",
+    "packageFolder": "com/easygo",
+    "serverPort": "8080",
+    "authenticationType": "jwt",
+    "cacheProvider": "no",
+    "enableHibernateCache": false,
+    "websocket": false,
+    "databaseType": "mongodb",
+    "devDatabaseType": "mongodb",
+    "prodDatabaseType": "mongodb",
+    "searchEngine": false,
+    "messageBroker": false,
+    "serviceDiscoveryType": false,
+    "buildTool": "maven",
+    "enableSwaggerCodegen": false,
+    "jwtSecretKey": "NTQ3YmFkMzM2ODM0NzY3MGM4YmFkMWI5Y2MxM2RkNDdjY2E5NTFhOTIwZGMxNzBlYjc0ODlhODMwMGU5MjczNTM2MWY0YmY5OTcyMWU2YTUyMTUzNTQ5ODQ0YmQ3MzllZWYyZDI2NjBkN2E0OGJkNmMyMTk5YjQzMmMzYjEwMWQ=",
+    "clientFramework": "react",
+    "clientTheme": "none",
+    "clientThemeVariant": "",
+    "useSass": true,
+    "clientPackageManager": "npm",
+    "testFrameworks": [],
+    "jhiPrefix": "jhi",
+    "entitySuffix": "",
+    "dtoSuffix": "DTO",
+    "otherModules": [],
+    "enableTranslation": false
+  }
+}

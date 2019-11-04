@@ -1,0 +1,21 @@
+
+${AnsiColor.BRIGHT_BLUE}##################################################################################
+${AnsiColor.BRIGHT_BLUE}##                       ${AnsiColor.WHITE}SIR, I'm Compiling Your Code!!                         ${AnsiColor.BRIGHT_BLUE}##
+${AnsiColor.BRIGHT_BLUE}##################################################################################
+${AnsiColor.BRIGHT_BLUE}#                                                                                #
+${AnsiColor.BRIGHT_BLUE}# ${AnsiColor.GREEN}••••••••••••    ••      ••     •           •     ••••••••••••     ••           ${AnsiColor.BRIGHT_BLUE}#
+${AnsiColor.BRIGHT_BLUE}# ${AnsiColor.GREEN}••••••••••••    ••      ••     ••          •     ••••••••••••     ••           ${AnsiColor.BRIGHT_BLUE}#
+${AnsiColor.BRIGHT_BLUE}# ${AnsiColor.GREEN}••              ••      ••     • •         •          ••          ••           ${AnsiColor.BRIGHT_BLUE}#
+${AnsiColor.BRIGHT_BLUE}# ${AnsiColor.GREEN}••              ••      ••     •  •        •          ••          ••           ${AnsiColor.BRIGHT_BLUE}#
+${AnsiColor.BRIGHT_BLUE}# ${AnsiColor.GREEN}••              ••      ••     •   •       •          ••          ••           ${AnsiColor.BRIGHT_BLUE}#  
+${AnsiColor.BRIGHT_BLUE}# ${AnsiColor.GREEN}••••••••••••    ••      ••     •    •      •          ••          ••           ${AnsiColor.BRIGHT_BLUE}# 
+${AnsiColor.BRIGHT_BLUE}# ${AnsiColor.GREEN}••••••••••••    ••      ••     •     •     •          ••          ••           ${AnsiColor.BRIGHT_BLUE}#
+${AnsiColor.BRIGHT_BLUE}#           ${AnsiColor.GREEN}••    ••      ••     •      •    •          ••          ••           ${AnsiColor.BRIGHT_BLUE}#
+${AnsiColor.BRIGHT_BLUE}#           ${AnsiColor.GREEN}••    ••      ••     •       •   •          ••          ••           ${AnsiColor.BRIGHT_BLUE}#
+${AnsiColor.BRIGHT_BLUE}#           ${AnsiColor.GREEN}••    ••      ••     •        •  •          ••          ••           ${AnsiColor.BRIGHT_BLUE}#
+${AnsiColor.BRIGHT_BLUE}# ${AnsiColor.GREEN}••••••••••••    ••••••••••     •         • •     •••••••••••••    •••••••••••• ${AnsiColor.BRIGHT_BLUE}#
+${AnsiColor.BRIGHT_BLUE}# ${AnsiColor.GREEN}••••••••••••    ••••••••••     •          ••     •••••••••••••    •••••••••••• ${AnsiColor.BRIGHT_BLUE}#
+${AnsiColor.BRIGHT_BLUE}#                                                                                #
+${AnsiColor.BRIGHT_BLUE}##################################################################################
+${AnsiColor.BRIGHT_BLUE}##                        ${AnsiColor.WHITE}Welcome, Mr. Sunil, You're online now!!               ${AnsiColor.BRIGHT_BLUE}##
+${AnsiColor.BRIGHT_BLUE}##################################################################################
