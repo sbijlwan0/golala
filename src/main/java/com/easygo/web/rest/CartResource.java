@@ -52,7 +52,12 @@ public class CartResource {
 		
 		if(cartRepo.findByUserId(user.getId()).isPresent()) {
 			cart=cartRepo.findByUserId(user.getId()).get();
-			cart.getItems().add(product);
+			if(null==cart.getItems()) {
+			List<ProductDTO> pros=new ArrayList<ProductDTO>();
+			pros.add(product);
+			cart.setItems(pros);}
+			else
+				cart.getItems().add(product);
 		}
 			
 		else {
@@ -114,16 +119,20 @@ public class CartResource {
 				HttpStatus.OK);
 	}
 
-	@DeleteMapping("/cart/{id}")
-	public ResponseEntity<?> removeCart(@PathVariable("id") String id) throws BadRequestException {
+	@DeleteMapping("/cart/{cartId}/{id}")
+	public ResponseEntity<?> removeCart(@PathVariable("cartId") String cartId,@PathVariable("id") int id) throws BadRequestException {
 
 		log.debug("rest request to remove cart by id");
 
-		if (!cartRepo.findById(id).isPresent())
-			throw new BadRequestException("Invalid Id");
+//		User user=userRepo.findById(userId).get();
+		
+		Cart cart=cartRepo.findById(cartId).get();
+		
+		for(int i=0;i<cart.getItems().size();i++)
+			if(cart.getItems().get(i).getId()==id)
+				cart.getItems().remove(i);
 
-		cartRepo.deleteById(id);
-
+		Cart result = cartRepo.save(cart);
 		return new ResponseEntity<>(new ResultStatus("Success", "Cart removed"), HttpStatus.OK);
 	}
 

@@ -3,7 +3,9 @@ package com.easygo.service.dto;
 import java.util.List;
 
 public class ProductDTO {
-
+	
+	private int id;
+	
 	private String name;
 	
 	private List<String> images;
@@ -19,6 +21,21 @@ public class ProductDTO {
 	private double quantity;
 	
 	private int subProductId;
+	
+	private String business_name;
+	
+	private String product_description;
+	
+	
+	
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
 
 	public String getName() {
 		return name;
@@ -82,6 +99,22 @@ public class ProductDTO {
 
 	public void setSubProductId(int subProductId) {
 		this.subProductId = subProductId;
+	}
+
+	public String getBusiness_name() {
+		return business_name;
+	}
+
+	public void setBusiness_name(String business_name) {
+		this.business_name = business_name;
+	}
+
+	public String getProduct_description() {
+		return product_description;
+	}
+
+	public void setProduct_description(String product_description) {
+		this.product_description = product_description;
 	}
 	
 	
