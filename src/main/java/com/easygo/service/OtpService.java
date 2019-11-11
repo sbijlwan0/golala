@@ -21,9 +21,9 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class OtpService {
 	
-	String signupMessage="[#] Your OTP is ##OTP## for login in EasyGo.";
-	String loginMessage="[#] Your OTP is ##OTP## to change password of your account in EasyGo.";
-	String sender="EASYGO";
+	String signupMessage="[#] Your OTP is ##OTP## for login in GOLALA.";
+	String loginMessage="[#] Your OTP is ##OTP## to change password of your account in GOLALA.";
+	String sender="GOLALA";
 	
 	@Value("${message.key}")
     private String authKey;

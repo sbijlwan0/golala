@@ -6,6 +6,9 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 
 import com.easygo.service.dto.ProductDTO;
 
@@ -35,6 +38,13 @@ public class Order extends AbstractAuditingEntity implements Serializable{
     private String customerOtp;
     
     private boolean returnOrder=false;
+    
+    @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
+    private GeoJsonPoint location;
+    
+    private Address deliveryAddress;
+    
+    private Address billingAddress;
     
     
 
@@ -116,6 +126,32 @@ public class Order extends AbstractAuditingEntity implements Serializable{
 
 	public void setPrice(double price) {
 		this.price = price;
+	}
+
+	
+
+	public GeoJsonPoint getLocation() {
+		return location;
+	}
+
+	public void setLocation(GeoJsonPoint location) {
+		this.location = location;
+	}
+
+	public Address getDeliveryAddress() {
+		return deliveryAddress;
+	}
+
+	public void setDeliveryAddress(Address deliveryAddress) {
+		this.deliveryAddress = deliveryAddress;
+	}
+
+	public Address getBillingAddress() {
+		return billingAddress;
+	}
+
+	public void setBillingAddress(Address billingAddress) {
+		this.billingAddress = billingAddress;
 	}
     
     

@@ -80,6 +80,31 @@ public class OrderResource {
 
 		return new ResponseEntity<>(new ResultStatus("Success", "Order Updated", result), HttpStatus.OK);
 	}
+	
+	@PutMapping("updateStatus/{otp}/{status}")
+	public ResponseEntity<?> verifyOTP(@PathVariable("otp") String otp, @PathVariable("status") String status, @RequestBody Order order) throws BadRequestException{
+		
+		switch(status){
+			
+		case "Picked": if(order.getVendorOtp().equalsIgnoreCase(otp)) {
+			order.setStatus(status);
+			break;}
+		throw new BadRequestException("Invalid OTP");
+		
+		case "Delivered": if(order.getCustomerOtp().equalsIgnoreCase(otp)) {
+			order.setStatus(status);
+			break;
+		}
+		throw new BadRequestException("Invalid OTP");
+		
+		default: throw new BadRequestException("Invalid Status");
+		
+		}
+		
+		Order result = orderRepo.save(order);
+		
+		return new ResponseEntity<>(new ResultStatus("Success","Status Updated",result),HttpStatus.OK);
+	}
 
 	@GetMapping("/order/{page}")
 	public ResponseEntity<?> getAllOrder(@PathVariable("page") int page) {
@@ -116,7 +141,7 @@ public class OrderResource {
 
 		log.debug("rest request to remove order by id.");
 
-		if (orderRepo.findById(id).isPresent())
+		if (!orderRepo.findById(id).isPresent())
 			throw new BadRequestException("order not found");
 
 		orderRepo.deleteById(id);
