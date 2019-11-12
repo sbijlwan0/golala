@@ -46,6 +46,12 @@ public class CartResource {
 
 		log.debug("rest request to add cart");
 
+		if(!SecurityUtils.getCurrentUserLogin().isPresent() || SecurityUtils.getCurrentUserLogin().get().equalsIgnoreCase(""))
+			return new ResponseEntity<>(new ResultStatus("Error","Login First"),HttpStatus.BAD_REQUEST);
+		
+		
+		try {
+		
 		User user=userRepo.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
 		
 		Cart cart=new Cart();
@@ -73,6 +79,12 @@ public class CartResource {
 		Cart result = cartRepo.save(cart);
 
 		return new ResponseEntity<>(new ResultStatus("Success", "Added to cart", result), HttpStatus.OK);
+		
+		}catch(Exception e) {
+			return new ResponseEntity<>(new ResultStatus("Error","Token Expired. Login Again"),HttpStatus.BAD_REQUEST);
+		}
+		
+		
 	}
 
 	@PutMapping("/cart")

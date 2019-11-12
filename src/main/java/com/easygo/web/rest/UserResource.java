@@ -238,7 +238,7 @@ public class UserResource {
      * @param login the login of the user to find.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the "login" user, or with status {@code 404 (Not Found)}.
      */
-    @GetMapping("/users/{login:" + Constants.LOGIN_REGEX + "}")
+    @GetMapping("/users/{login}")
     public ResponseEntity<UserDTO> getUser(@PathVariable String login) {
         log.debug("REST request to get User : {}", login);
         return ResponseUtil.wrapOrNotFound(
@@ -247,15 +247,12 @@ public class UserResource {
     }
     
     
-    @GetMapping("/sendmai")
-    public void sendmai() {
-    	Organisation org=new Organisation();
-    	org.setBusinessName("Pizza Italia");
-    	User user=new User();
-    	user.setEmail("sbijlwan0@gmail.com");
-    	user.setFirstName("Sunil Bijalwan");
-    	mailService.sendOrganisationActivationMail(org, user);
+    @GetMapping("/getUserById/{id}") 
+    public ResponseEntity<?> getUserById(@PathVariable("id")String id) {
     	
+    	log.debug("get user by id");
+    	
+    	return new ResponseEntity<>(new ResultStatus("Success","User Fetched", userRepository.findById(id).get()),HttpStatus.OK);
     }
 
     /**

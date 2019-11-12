@@ -66,7 +66,8 @@ public class OrganisationResource {
 			org.setVendor(userRepo.findById(org.getVendorId()).get());
 		else
 			throw new BadRequestException("You are not a vendor. Please register as vendor first.");
-
+		
+		
 		Organisation result = orgRepo.save(org);
 
 		return new ResponseEntity<>(new ResultStatus("Success", "Organisation Added", result), HttpStatus.CREATED);

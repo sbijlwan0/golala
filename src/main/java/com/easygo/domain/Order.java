@@ -1,6 +1,7 @@
 package com.easygo.domain;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.List;
 
 import javax.validation.constraints.NotNull;
@@ -38,6 +39,8 @@ public class Order extends AbstractAuditingEntity implements Serializable{
     private String customerOtp;
     
     private boolean returnOrder=false;
+    
+    private Instant deliveryTime;
     
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     private GeoJsonPoint location;
@@ -129,6 +132,14 @@ public class Order extends AbstractAuditingEntity implements Serializable{
 	}
 
 	
+
+	public Instant getDeliveryTime() {
+		return deliveryTime;
+	}
+
+	public void setDeliveryTime(Instant deliveryTime) {
+		this.deliveryTime = deliveryTime;
+	}
 
 	public GeoJsonPoint getLocation() {
 		return location;

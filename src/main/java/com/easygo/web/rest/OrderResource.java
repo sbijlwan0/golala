@@ -1,5 +1,7 @@
 package com.easygo.web.rest;
 
+import java.time.Instant;
+
 import javax.validation.Valid;
 
 import org.slf4j.Logger;
@@ -88,11 +90,13 @@ public class OrderResource {
 			
 		case "Picked": if(order.getVendorOtp().equalsIgnoreCase(otp)) {
 			order.setStatus(status);
-			break;}
+			break;
+			}
 		throw new BadRequestException("Invalid OTP");
 		
 		case "Delivered": if(order.getCustomerOtp().equalsIgnoreCase(otp)) {
 			order.setStatus(status);
+			order.setDeliveryTime(Instant.now());
 			break;
 		}
 		throw new BadRequestException("Invalid OTP");
