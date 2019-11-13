@@ -133,7 +133,7 @@ public class OrderResource {
 
 		log.debug("rest request to get order by id.");
 
-		if (orderRepo.findById(id).isPresent())
+		if (!orderRepo.findById(id).isPresent())
 			throw new BadRequestException("order not found");
 
 		return new ResponseEntity<>(new ResultStatus("Success", "Order Fetched", orderRepo.findById(id).get()),
