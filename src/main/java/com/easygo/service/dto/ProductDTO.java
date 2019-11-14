@@ -26,6 +26,10 @@ public class ProductDTO {
 	
 	private String product_description;
 	
+	private String status="Processing";
+	
+	private String reason;
+	
 	
 	
 
@@ -115,6 +119,22 @@ public class ProductDTO {
 
 	public void setProduct_description(String product_description) {
 		this.product_description = product_description;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	public String getReason() {
+		return reason;
+	}
+
+	public void setReason(String reason) {
+		this.reason = reason;
 	}
 	
 	

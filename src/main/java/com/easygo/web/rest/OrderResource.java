@@ -1,6 +1,7 @@
 package com.easygo.web.rest;
 
 import java.time.Instant;
+import java.util.List;
 
 import javax.validation.Valid;
 
@@ -83,8 +84,8 @@ public class OrderResource {
 		return new ResponseEntity<>(new ResultStatus("Success", "Order Updated", result), HttpStatus.OK);
 	}
 	
-	@PutMapping("updateStatus/{otp}/{status}")
-	public ResponseEntity<?> verifyOTP(@PathVariable("otp") String otp, @PathVariable("status") String status, @RequestBody Order order) throws BadRequestException{
+	@PutMapping("updateOrderStatus/{otp}/{status}")
+	public ResponseEntity<?> verifyOrderOTP(@PathVariable("otp") String otp, @PathVariable("status") String status, @RequestBody Order order) throws BadRequestException{
 		
 		switch(status){
 			
@@ -108,6 +109,20 @@ public class OrderResource {
 		Order result = orderRepo.save(order);
 		
 		return new ResponseEntity<>(new ResultStatus("Success","Status Updated",result),HttpStatus.OK);
+	}
+	
+	@PutMapping("CancelOrder/{orderId}")
+	public ResponseEntity<?> cancelOrder(@PathVariable("orderId") String orderId, @RequestBody List<String> ids){
+		
+		log.debug("rest request to cancel Order");
+		
+		Order order = orderRepo.findById(orderId).get();
+		
+		order=updateProduct(order,ids);
+		
+		Order result=orderRepo.save(order);
+		
+		return new ResponseEntity<>(new ResultStatus("Success","Order Cancelled",result),HttpStatus.OK);
 	}
 
 	@GetMapping("/order/{page}")
@@ -153,6 +168,8 @@ public class OrderResource {
 		return new ResponseEntity<>(new ResultStatus("Success", "Order Removed"), HttpStatus.OK);
 	}
 
+	
+	
 	public void validateItemList(Order order) throws BadRequestException {
 		double price = 0;
 		for (int n = 1; n < 3; n++) {
@@ -233,4 +250,25 @@ public class OrderResource {
 		if (price != order.getPrice())
 			order.setPrice(price);
 	}
+	
+	public Order updateProduct(Order order,List<String>ids) {
+		
+		for(ProductDTO product : order.getItems()) {
+			
+			if(ids.contains(product.getProductId())) {
+				Product pro = proRepo.findById(product.getProductId()).get();
+				
+				for(SubProduct spro:pro.getSubProduct())
+					if(spro.getId()==product.getSubProductId())
+						spro.setQuantity(spro.getQuantity()+product.getQuantity());
+				order.setPrice(order.getPrice()-(product.getDiscountPrice()*product.getQuantity()));
+				product.setStatus("Cancelled");
+				proRepo.save(pro);
+			}
+			
+		}
+		return order;	
+	}
+	
+	
 }
