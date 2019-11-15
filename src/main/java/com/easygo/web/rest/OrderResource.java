@@ -43,7 +43,7 @@ public class OrderResource {
 
 	@Autowired
 	ProductRepository proRepo;
-	
+
 	@Autowired
 	PushService push;
 
@@ -56,9 +56,9 @@ public class OrderResource {
 			throw new BadRequestException("Invalid Order.");
 
 		validateItemList(order);
-		
+
 		order.setCustomerOtp(RandomUtil.generateOTP());
-		
+
 		order.setVendorOtp(RandomUtil.generateOTP());
 
 		Order result = orderRepo.save(order);
@@ -74,55 +74,67 @@ public class OrderResource {
 		if (null == order.getId() || order.isReturnOrder())
 			throw new BadRequestException("Invalid Order.");
 
-		if(order.getStatus().equalsIgnoreCase("Delivered"))
+		if (order.getStatus().equalsIgnoreCase("Delivered"))
 			throw new BadRequestException("order is delivered. can't be updated now.");
-		
+
 		reverseOrder(order);
 
 		Order result = orderRepo.save(order);
 
 		return new ResponseEntity<>(new ResultStatus("Success", "Order Updated", result), HttpStatus.OK);
 	}
-	
+
 	@PutMapping("updateOrderStatus/{otp}/{status}")
-	public ResponseEntity<?> verifyOrderOTP(@PathVariable("otp") String otp, @PathVariable("status") String status, @RequestBody Order order) throws BadRequestException{
-		
-		switch(status){
-			
-		case "Picked": if(order.getVendorOtp().equalsIgnoreCase(otp)) {
-			order.setStatus(status);
-			break;
+	public ResponseEntity<?> verifyOrderOTP(@PathVariable("otp") String otp, @PathVariable("status") String status,
+			@RequestBody Order order) throws BadRequestException {
+
+		switch (status) {
+
+		case "Picked":
+			if (order.getVendorOtp().equalsIgnoreCase(otp)) {
+				order.setStatus(status);
+				break;
 			}
-		throw new BadRequestException("Invalid OTP");
-		
-		case "Delivered": if(order.getCustomerOtp().equalsIgnoreCase(otp)) {
-			order.setStatus(status);
-			order.setDeliveryTime(Instant.now());
-			break;
+			throw new BadRequestException("Invalid OTP");
+
+		case "Delivered":
+			if (order.getCustomerOtp().equalsIgnoreCase(otp)) {
+				order.setStatus(status);
+				order.setDeliveryTime(Instant.now());
+				break;
+			}
+			throw new BadRequestException("Invalid OTP");
+
+		default:
+			throw new BadRequestException("Invalid Status");
+
 		}
-		throw new BadRequestException("Invalid OTP");
-		
-		default: throw new BadRequestException("Invalid Status");
-		
-		}
-		
+
 		Order result = orderRepo.save(order);
-		
-		return new ResponseEntity<>(new ResultStatus("Success","Status Updated",result),HttpStatus.OK);
+
+		return new ResponseEntity<>(new ResultStatus("Success", "Status Updated", result), HttpStatus.OK);
 	}
-	
+
 	@PutMapping("CancelOrder/{orderId}")
-	public ResponseEntity<?> cancelOrder(@PathVariable("orderId") String orderId, @RequestBody List<String> ids){
-		
+	public ResponseEntity<?> cancelOrder(@PathVariable("orderId") String orderId, @RequestBody List<String> ids) {
+
 		log.debug("rest request to cancel Order");
-		
+
 		Order order = orderRepo.findById(orderId).get();
-		
-		order=updateProduct(order,ids);
-		
-		Order result=orderRepo.save(order);
-		
-		return new ResponseEntity<>(new ResultStatus("Success","Order Cancelled",result),HttpStatus.OK);
+
+		if (ids.size() == 0) {
+			order.setStatus("Cancelled");
+			for (ProductDTO pro : order.getItems()) {
+				pro.setStatus("Cancelled");
+				ids.add(pro.getProductId());
+			}
+		}
+
+		order = updateProduct(order, ids);
+
+		Order result = orderRepo.save(order);
+
+		return new ResponseEntity<>(new ResultStatus("Success", "Order Cancelled", result), HttpStatus.OK);
 	}
 
 	@GetMapping("/order/{page}")
@@ -168,8 +180,22 @@ public class OrderResource {
 		return new ResponseEntity<>(new ResultStatus("Success", "Order Removed"), HttpStatus.OK);
 	}
 
-	
-	
+//	@GetMapping("cancelOrderById/{id}")
+//	public ResponseEntity<?> cancelOrderById(@PathVariable("id") String id) throws BadRequestException{
+//		
+//		log.debug("rest request to cancel order by id");
+//		
+//		Order order=orderRepo.findById(id).get();
+//		
+//		
+//		
+//		reverseOrder( order);
+//		Order result = orderRepo.save(order);
+//		
+//		return new ResponseEntity<>(new ResultStatus("Success","Order Cancelled",result),HttpStatus.OK);
+//	}
+//	
+
 	public void validateItemList(Order order) throws BadRequestException {
 		double price = 0;
 		for (int n = 1; n < 3; n++) {
@@ -199,6 +225,8 @@ public class OrderResource {
 					proRepo.save(pro);
 			}
 		}
+		if (!order.getStatus().equalsIgnoreCase("Cancelled"))
+			price = price - order.getDiscount();
 		if (price != order.getPrice())
 			order.setPrice(price);
 	}
@@ -225,7 +253,8 @@ public class OrderResource {
 										"Invalid quantity for sub Product id " + pro.getSubProduct().get(j).getId()
 												+ " of name " + order.getItems().get(i).getName());
 						}
-						if (n == 2) {
+						if (n == 2 && !order.getStatus().equalsIgnoreCase("Cancelled")
+								&& !order.getItems().get(i).getStatus().equalsIgnoreCase("Cancelled")) {
 							double q = 0;
 							if (oldOrder.getItems().get(i).getQuantity() > order.getItems().get(i).getQuantity()) {
 								q = oldOrder.getItems().get(i).getQuantity() - order.getItems().get(i).getQuantity();
@@ -247,28 +276,29 @@ public class OrderResource {
 					proRepo.save(pro);
 			}
 		}
+		if (!order.getStatus().equalsIgnoreCase("Cancelled"))
+			price = price - order.getDiscount();
 		if (price != order.getPrice())
 			order.setPrice(price);
 	}
-	
-	public Order updateProduct(Order order,List<String>ids) {
-		
-		for(ProductDTO product : order.getItems()) {
-			
-			if(ids.contains(product.getProductId())) {
+
+	public Order updateProduct(Order order, List<String> ids) {
+
+		for (ProductDTO product : order.getItems()) {
+
+			if (ids.contains(product.getProductId())) {
 				Product pro = proRepo.findById(product.getProductId()).get();
-				
-				for(SubProduct spro:pro.getSubProduct())
-					if(spro.getId()==product.getSubProductId())
-						spro.setQuantity(spro.getQuantity()+product.getQuantity());
-				order.setPrice(order.getPrice()-(product.getDiscountPrice()*product.getQuantity()));
+
+				for (SubProduct spro : pro.getSubProduct())
+					if (spro.getId() == product.getSubProductId())
+						spro.setQuantity(spro.getQuantity() + product.getQuantity());
+				order.setPrice(order.getPrice() - (product.getDiscountPrice() * product.getQuantity()));
 				product.setStatus("Cancelled");
 				proRepo.save(pro);
 			}
-			
+
 		}
-		return order;	
+		return order;
 	}
-	
-	
+
 }

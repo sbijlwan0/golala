@@ -49,6 +49,16 @@ public class Order extends AbstractAuditingEntity implements Serializable{
     
     private Address billingAddress;
     
+    private String couponCode;
+    
+    private double discount;
+    
+    private double discountedAmount;
+    
+    private double deliveryCharge;
+    
+    private double subTotal;
+    
     
 
 	public String getId() {
@@ -163,6 +173,46 @@ public class Order extends AbstractAuditingEntity implements Serializable{
 
 	public void setBillingAddress(Address billingAddress) {
 		this.billingAddress = billingAddress;
+	}
+
+	public String getCouponCode() {
+		return couponCode;
+	}
+
+	public void setCouponCode(String couponCode) {
+		this.couponCode = couponCode;
+	}
+
+	public double getDiscount() {
+		return discount;
+	}
+
+	public void setDiscount(double discount) {
+		this.discount = discount;
+	}
+
+	public double getDiscountedAmount() {
+		return discountedAmount;
+	}
+
+	public void setDiscountedAmount(double discountedAmount) {
+		this.discountedAmount = discountedAmount;
+	}
+
+	public double getDeliveryCharge() {
+		return deliveryCharge;
+	}
+
+	public void setDeliveryCharge(double deliveryCharge) {
+		this.deliveryCharge = deliveryCharge;
+	}
+
+	public double getSubTotal() {
+		return subTotal;
+	}
+
+	public void setSubTotal(double subTotal) {
+		this.subTotal = subTotal;
 	}
     
     

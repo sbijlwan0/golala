@@ -40,6 +40,8 @@ public class Product extends AbstractAuditingEntity implements Serializable{
     private String image;
     
     private double rating;
+    
+    private double tax;
 
 	public String getId() {
 		return id;
@@ -127,6 +129,14 @@ public class Product extends AbstractAuditingEntity implements Serializable{
 
 	public void setRating(double rating) {
 		this.rating = rating;
+	}
+
+	public double getTax() {
+		return tax;
+	}
+
+	public void setTax(double tax) {
+		this.tax = tax;
 	}
     
     

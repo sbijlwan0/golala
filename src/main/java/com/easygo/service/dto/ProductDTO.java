@@ -28,6 +28,8 @@ public class ProductDTO {
 	
 	private String status="Processing";
 	
+	private double tax;
+	
 	private String reason;
 	
 	
@@ -136,8 +138,15 @@ public class ProductDTO {
 	public void setReason(String reason) {
 		this.reason = reason;
 	}
-	
-	
-	
+
+	public double getTax() {
+		return tax;
+	}
+
+	public void setTax(double tax) {
+		this.tax = tax;
+	}
+
+
 	
 }
