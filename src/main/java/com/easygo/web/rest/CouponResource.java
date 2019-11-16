@@ -81,7 +81,7 @@ public class CouponResource {
 			
 	}
 	
-	@GetMapping("/coupon/{id}")
+	@GetMapping("/couponById/{id}")
 	public ResponseEntity<?> getCouponById(@PathVariable("id")String id){
 		
 		log.debug("rest request to get coupon by id",id);

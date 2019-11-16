@@ -116,17 +116,17 @@ public class OrderResource {
 	}
 
 	@PutMapping("CancelOrder/{orderId}")
-	public ResponseEntity<?> cancelOrder(@PathVariable("orderId") String orderId, @RequestBody List<String> ids) {
+	public ResponseEntity<?> cancelOrder(@PathVariable("orderId") String orderId, @RequestBody List<Integer> ids) {
 
 		log.debug("rest request to cancel Order");
 
 		Order order = orderRepo.findById(orderId).get();
 
-		if (ids.size() == 0) {
+		if (ids.size() == 0 || ids.isEmpty()) {
+			if(!order.getStatus().equalsIgnoreCase("Cancelled"))
 			order.setStatus("Cancelled");
 			for (ProductDTO pro : order.getItems()) {
-				pro.setStatus("Cancelled");
-				ids.add(pro.getProductId());
+				ids.add(pro.getId());
 			}
 		}
 
@@ -225,10 +225,11 @@ public class OrderResource {
 					proRepo.save(pro);
 			}
 		}
-		if (!order.getStatus().equalsIgnoreCase("Cancelled"))
-			price = price - order.getDiscount();
-		if (price != order.getPrice())
-			order.setPrice(price);
+//		if (!order.getStatus().equalsIgnoreCase("Cancelled"))
+//			if(null!=order.getCouponCode())
+//			price = price - order.getDiscount();
+//		if (price != order.getPrice())
+//			order.setPrice(price);
 	}
 
 	public void reverseOrder(Order order) throws BadRequestException {
@@ -276,23 +277,24 @@ public class OrderResource {
 					proRepo.save(pro);
 			}
 		}
-		if (!order.getStatus().equalsIgnoreCase("Cancelled"))
-			price = price - order.getDiscount();
-		if (price != order.getPrice())
-			order.setPrice(price);
+//		if (!order.getStatus().equalsIgnoreCase("Cancelled"))
+//			if(null!=order.getCouponCode())
+//			price = price - order.getDiscount();
+//		if (price != order.getPrice())
+//			order.setPrice(price);
 	}
 
-	public Order updateProduct(Order order, List<String> ids) {
+	public Order updateProduct(Order order, List<Integer> ids) {
 
 		for (ProductDTO product : order.getItems()) {
 
-			if (ids.contains(product.getProductId())) {
+			if (ids.contains(product.getId())) {
 				Product pro = proRepo.findById(product.getProductId()).get();
 
 				for (SubProduct spro : pro.getSubProduct())
 					if (spro.getId() == product.getSubProductId())
 						spro.setQuantity(spro.getQuantity() + product.getQuantity());
-				order.setPrice(order.getPrice() - (product.getDiscountPrice() * product.getQuantity()));
+//				order.setPrice(order.getPrice() - (product.getDiscountPrice() * product.getQuantity()));
 				product.setStatus("Cancelled");
 				proRepo.save(pro);
 			}
