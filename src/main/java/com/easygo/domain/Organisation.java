@@ -44,6 +44,8 @@ public class Organisation extends AbstractAuditingEntity implements Serializable
     private GeoJsonPoint location;
     
     private List<String>images;
+    
+    private boolean open=true;
 
     private boolean activated=false;
         
@@ -159,6 +161,16 @@ public class Organisation extends AbstractAuditingEntity implements Serializable
 
 	public void setImages(List<String> images) {
 		this.images = images;
+	}
+
+	
+	
+	public boolean isOpen() {
+		return open;
+	}
+
+	public void setOpen(boolean open) {
+		this.open = open;
 	}
 
 	@Override

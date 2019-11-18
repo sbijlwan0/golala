@@ -19,10 +19,10 @@ public interface OrganisationRepository extends MongoRepository<Organisation, St
 
 	Page<Organisation> findAllByActivated(@Param("activated") boolean activated, Pageable pageable);
 
-	Page<Organisation> findAllByActivatedIsTrueAndLocationNear(@Param("point") Point point, @Param("d") Distance d,
+	Page<Organisation> findAllByActivatedIsTrueAndOpenIsTrueAndLocationNear(@Param("point") Point point, @Param("d") Distance d,
 			Pageable pageable);
 
-	List<Organisation> findAllByActivatedAndLocationNear(@Param("activated") boolean activated,
+	List<Organisation> findAllByActivatedAndOpenIsTrueAndLocationNear(@Param("activated") boolean activated,
 			@Param("point") Point point, @Param("d") Distance d);
 
 	Page<Organisation> findAllByActivatedAndAddressLikeIgnoreCase(@Param("activated") boolean activated,

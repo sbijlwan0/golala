@@ -181,7 +181,7 @@ public class ProductResource {
 		if (filter.getSortDir().equalsIgnoreCase("asc"))
 			sort = new Sort(Sort.Direction.ASC, filter.getSortCol());
 
-		List<Organisation> orgs = orgRepo.findAllByActivatedAndLocationNear(true,
+		List<Organisation> orgs = orgRepo.findAllByActivatedAndOpenIsTrueAndLocationNear(true,
 				new Point(filter.getLatitude(), filter.getLongitude()),
 				new Distance(filter.getDistance(), Metrics.KILOMETERS));
 
