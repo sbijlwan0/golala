@@ -174,7 +174,7 @@ public class OrganisationResource {
 			sort = new Sort(Sort.Direction.ASC, filter.getSortCol());
 
 		return new ResponseEntity<>(new ResultStatus("Success", "Organisation Fetched",
-				orgRepo.findAllByActivatedIsTrueAndOpenIsTrueAndLocationNear(new Point(filter.getLatitude(), filter.getLongitude()),
+				orgRepo.findAllByActivatedIsTrueAndLocationNear(new Point(filter.getLatitude(), filter.getLongitude()),
 						new Distance(filter.getDistance(), Metrics.KILOMETERS), PageRequest.of(filter.getPage(), 10,sort))),
 				HttpStatus.OK);
 

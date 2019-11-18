@@ -1,6 +1,8 @@
 package com.easygo.web.rest;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -9,6 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,6 +34,7 @@ import com.easygo.service.dto.ProductDTO;
 import com.easygo.service.dto.ResultStatus;
 import com.easygo.service.dto.SubProduct;
 import com.easygo.service.util.RandomUtil;
+import com.google.common.collect.Lists;
 
 import io.undertow.util.BadRequestException;
 
@@ -46,6 +52,9 @@ public class OrderResource {
 
 	@Autowired
 	PushService push;
+	
+	@Autowired
+	MongoTemplate mongoTemplate;
 
 	@PostMapping("/order")
 	public ResponseEntity<?> placeOrder(@Valid @RequestBody Order order) throws BadRequestException {
@@ -180,21 +189,27 @@ public class OrderResource {
 		return new ResponseEntity<>(new ResultStatus("Success", "Order Removed"), HttpStatus.OK);
 	}
 
-//	@GetMapping("cancelOrderById/{id}")
-//	public ResponseEntity<?> cancelOrderById(@PathVariable("id") String id) throws BadRequestException{
-//		
-//		log.debug("rest request to cancel order by id");
-//		
-//		Order order=orderRepo.findById(id).get();
-//		
-//		
-//		
-//		reverseOrder( order);
-//		Order result = orderRepo.save(order);
-//		
-//		return new ResponseEntity<>(new ResultStatus("Success","Order Cancelled",result),HttpStatus.OK);
-//	}
-//	
+	@GetMapping("vendorOrders/{id}")
+	public ResponseEntity<?> vendorOrders(@PathVariable("id") String id) throws BadRequestException{
+		
+		log.debug("rest request to cancel order by id");
+		
+		Criteria criteria = new Criteria();
+		
+		criteria.andOperator(Criteria.where("organisationId").is(id));
+		
+		Query query = new Query(criteria);
+		
+		List<Object> codes = mongoTemplate.findDistinct(query, "_id", "products", Object.class);
+		
+		List<String> ids=new ArrayList<>();
+		
+		for(Object o : codes)
+			ids.add(o.toString());
+		
+		return new ResponseEntity<>(new ResultStatus("Success","Order Fetched",orderRepo.findByProductIdIn(ids, PageRequest.of(0, 10))),HttpStatus.OK);
+	}
+	
 
 	public void validateItemList(Order order) throws BadRequestException {
 		double price = 0;
