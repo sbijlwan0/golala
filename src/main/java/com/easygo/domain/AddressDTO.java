@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 
 @org.springframework.data.mongodb.core.mapping.Document(collection="address")
-public class Address {
+public class AddressDTO {
 	
 	@Id
 	private String id;

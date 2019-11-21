@@ -6,11 +6,11 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.easygo.domain.Address;
+import com.easygo.domain.AddressDTO;
 
 @Repository
-public interface AddressRepository extends MongoRepository<Address,String> {
+public interface AddressRepository extends MongoRepository<AddressDTO,String> {
 	
-	List<Address> findAllByUserId(@Param("userId")String userId);
+	List<AddressDTO> findAllByUserId(@Param("userId")String userId);
 
 }

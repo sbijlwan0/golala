@@ -45,9 +45,9 @@ public class Order extends AbstractAuditingEntity implements Serializable{
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     private GeoJsonPoint location;
     
-    private Address deliveryAddress;
+    private AddressDTO deliveryAddress;
     
-    private Address billingAddress;
+    private AddressDTO billingAddress;
     
     private String couponCode;
     
@@ -159,19 +159,19 @@ public class Order extends AbstractAuditingEntity implements Serializable{
 		this.location = location;
 	}
 
-	public Address getDeliveryAddress() {
+	public AddressDTO getDeliveryAddress() {
 		return deliveryAddress;
 	}
 
-	public void setDeliveryAddress(Address deliveryAddress) {
+	public void setDeliveryAddress(AddressDTO deliveryAddress) {
 		this.deliveryAddress = deliveryAddress;
 	}
 
-	public Address getBillingAddress() {
+	public AddressDTO getBillingAddress() {
 		return billingAddress;
 	}
 
-	public void setBillingAddress(Address billingAddress) {
+	public void setBillingAddress(AddressDTO billingAddress) {
 		this.billingAddress = billingAddress;
 	}
 

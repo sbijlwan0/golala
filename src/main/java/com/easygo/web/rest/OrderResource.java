@@ -25,8 +25,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.easygo.domain.Cart;
 import com.easygo.domain.Order;
 import com.easygo.domain.Product;
+import com.easygo.repository.CartRepository;
 import com.easygo.repository.OrderRepository;
 import com.easygo.repository.ProductRepository;
 import com.easygo.service.PushService;
@@ -54,6 +56,9 @@ public class OrderResource {
 	PushService push;
 	
 	@Autowired
+	CartRepository cartRepo;
+	
+	@Autowired
 	MongoTemplate mongoTemplate;
 
 	@PostMapping("/order")
@@ -71,6 +76,11 @@ public class OrderResource {
 		order.setVendorOtp(RandomUtil.generateOTP());
 
 		Order result = orderRepo.save(order);
+		
+		Cart cart = cartRepo.findByUserId(order.getUserId()).get();
+		List<ProductDTO>items=new ArrayList<>();
+		cart.setItems(items);
+		cartRepo.save(cart);
 
 		return new ResponseEntity<>(new ResultStatus("Success", "Order Placed", result), HttpStatus.CREATED);
 	}

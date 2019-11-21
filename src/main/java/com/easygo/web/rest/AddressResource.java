@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.easygo.domain.Address;
+import com.easygo.domain.AddressDTO;
 import com.easygo.repository.AddressRepository;
 import com.easygo.service.dto.ResultStatus;
 
@@ -32,28 +32,28 @@ public class AddressResource {
 	AddressRepository addRepo;
 	
 	@PostMapping("/address")
-	public ResponseEntity<?> createAddress(@Valid @RequestBody Address addr) throws BadRequestException{
+	public ResponseEntity<?> createAddress(@Valid @RequestBody AddressDTO addr) throws BadRequestException{
 		
 		log.debug("rest request to add address");
 		
 		if(null!=addr.getId())
 			throw new BadRequestException("New Address cannot already have an id.");
 		
-		Address result=addRepo.save(addr);
+		AddressDTO result=addRepo.save(addr);
 		
 		return new ResponseEntity<>(new ResultStatus("Success","Address added",result),HttpStatus.CREATED);
 	}
 	
 	
 	@PutMapping("/address")
-	public ResponseEntity<?> updateAddress(@Valid @RequestBody Address addr) throws BadRequestException{
+	public ResponseEntity<?> updateAddress(@Valid @RequestBody AddressDTO addr) throws BadRequestException{
 		
 		log.debug("rest request to update address");
 		
 		if(null==addr.getId())
 			throw new BadRequestException("New Address must have an id.");
 		
-		Address result=addRepo.save(addr);
+		AddressDTO result=addRepo.save(addr);
 		
 		return new ResponseEntity<>(new ResultStatus("Success","Address updated",result),HttpStatus.OK);
 	}
