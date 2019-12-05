@@ -89,13 +89,13 @@ jhipster:
       host: localhost
       port: 5000
       queue-size: 512
-      
+
 message:
   key: 248280ANqUJ74LU5bf42a88
   api: https://control.msg91.com/api/
-  
+
 fcm:
-  key: AAAA6_UjblY:APA91bHLpRHvnlIKDZZqLUNRDD5wct3EjM_A1pycxKY6VKgzLu88k0aejnmtAM1NxNlukA3kbD0NjdbpFUxCPiZVA0vujoE2hmAjA-vwZyuEz3HQ9n7rE1fZvOkw3Q2QGblfSkoyxyzv
+  key: AAAAp7AYKV8:APA91bGNbFLx8FgqKdNRCFasu-XgxAXGPefzIFa1qL5IuDHl3xpm9nagRdnt9AD1K3r8iznRB870Qsm4FD4BXENaQswcdMqVwtIt7Ft1FtMgI-d8_c7UrOY_bi8ileZui5npT94xp2Z9
   api: https://fcm.googleapis.com/fcm/send
 # ===================================================================
 # Application specific properties

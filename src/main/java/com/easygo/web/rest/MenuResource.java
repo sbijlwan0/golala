@@ -39,6 +39,11 @@ public class MenuResource {
 		if(null!=menu.getId())
 			throw new BadRequestException("Must not have an id");
 		
+		if(menuRepo.findByOrgId(menu.getOrgId()).isPresent()) {
+			Menu men=menuRepo.findByOrgId(menu.getOrgId()).get();
+			menu.getItemList().addAll(men.getItemList());
+		}
+		
 		Menu result=menuRepo.save(menu);
 		
 		return new ResponseEntity<>(new ResultStatus("Success","Menu Created",result),HttpStatus.CREATED);
@@ -74,7 +79,7 @@ public class MenuResource {
 		log.debug("rest request to get menu by org id");
 		
 		if(!menuRepo.findByOrgId(orgId).isPresent())
-			throw new BadRequestException("Menu Not found");
+			return new ResponseEntity<>(new ResultStatus("Success","Menu Not Found",new Menu()),HttpStatus.OK);
 		
 		return new ResponseEntity<>(new ResultStatus("Success","Menu fetched",menuRepo.findByOrgId(orgId).get()),HttpStatus.OK);
 	}

@@ -2,7 +2,6 @@ package com.easygo.web.rest;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -11,9 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metrics;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,20 +23,26 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.easygo.domain.Cart;
 import com.easygo.domain.Order;
 import com.easygo.domain.Product;
+import com.easygo.domain.User;
+import com.easygo.repository.AuthorityRepository;
 import com.easygo.repository.CartRepository;
 import com.easygo.repository.OrderRepository;
+import com.easygo.repository.OrganisationRepository;
 import com.easygo.repository.ProductRepository;
+import com.easygo.repository.UserRepository;
+import com.easygo.security.AuthoritiesConstants;
+import com.easygo.security.SecurityUtils;
 import com.easygo.service.PushService;
 import com.easygo.service.dto.ProductDTO;
 import com.easygo.service.dto.ResultStatus;
 import com.easygo.service.dto.SubProduct;
 import com.easygo.service.util.RandomUtil;
-import com.google.common.collect.Lists;
 
 import io.undertow.util.BadRequestException;
 
@@ -54,12 +60,21 @@ public class OrderResource {
 
 	@Autowired
 	PushService push;
-	
+
+	@Autowired
+	UserRepository userRepo;
+
 	@Autowired
 	CartRepository cartRepo;
-	
+
+	@Autowired
+	AuthorityRepository authRepo;
+
 	@Autowired
 	MongoTemplate mongoTemplate;
+
+	@Autowired
+	OrganisationRepository orgRepo;
 
 	@PostMapping("/order")
 	public ResponseEntity<?> placeOrder(@Valid @RequestBody Order order) throws BadRequestException {
@@ -71,18 +86,30 @@ public class OrderResource {
 
 		validateItemList(order);
 
-		order.setCustomerOtp(RandomUtil.generateOTP());
+		List<Order> orders = new ArrayList<Order>();
 
-		order.setVendorOtp(RandomUtil.generateOTP());
+		orders = vendorWise(order);
 
-		Order result = orderRepo.save(order);
-		
 		Cart cart = cartRepo.findByUserId(order.getUserId()).get();
-		List<ProductDTO>items=new ArrayList<>();
+		List<ProductDTO> items = new ArrayList<>();
 		cart.setItems(items);
 		cartRepo.save(cart);
 
-		return new ResponseEntity<>(new ResultStatus("Success", "Order Placed", result), HttpStatus.CREATED);
+		for (Order or : orders) {
+
+			push.sendOrderPlacedPush(userRepo.findById(order.getUserId()).get().getFcmTokens(), or);
+			push.sendOrderPlacedPush(orgRepo.findById(order.getOrgId()).get().getVendor().getFcmTokens(), or);
+			List<User> users = userRepo.findAllByAuthoritiesContainsAndLiveLocationNear(
+					authRepo.findById(AuthoritiesConstants.DELIVERER).get(),
+					new Point(orgRepo.findById(order.getOrgId()).get().getLocation().getX(),
+							orgRepo.findById(order.getOrgId()).get().getLocation().getY()),
+					new Distance(7, Metrics.KILOMETERS));
+
+			for (User user : users)
+				push.sendOrderPlacedPush(user.getFcmTokens(), or);
+		}
+
+		return new ResponseEntity<>(new ResultStatus("Success", "Order Placed", orders), HttpStatus.CREATED);
 	}
 
 	@PutMapping("/order")
@@ -107,31 +134,43 @@ public class OrderResource {
 	public ResponseEntity<?> verifyOrderOTP(@PathVariable("otp") String otp, @PathVariable("status") String status,
 			@RequestBody Order order) throws BadRequestException {
 
-		switch (status) {
+		try {
+			User user=userRepo.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
+			
+		if(!order.getDelivererId().equalsIgnoreCase(user.getId()))
+			return new ResponseEntity<>(new ResultStatus("Error", "Wrong driver for this order."), HttpStatus.BAD_REQUEST);
+			
+			switch (status) {
 
-		case "Picked":
-			if (order.getVendorOtp().equalsIgnoreCase(otp)) {
-				order.setStatus(status);
-				break;
+			case "Picked":
+				if (order.getVendorOtp().equalsIgnoreCase(otp)) {
+					order.setStatus(status);
+					push.sendOrderPickedPush(orgRepo.findById(order.getOrgId()).get().getVendor().getFcmTokens(), order);
+					break;
+				}
+				throw new BadRequestException("Invalid OTP");
+
+			case "Delivered":
+				if (order.getCustomerOtp().equalsIgnoreCase(otp)) {
+					order.setStatus(status);
+					order.setDeliveryTime(Instant.now());
+					push.sendOrderPickedPush(userRepo.findById(order.getUserId()).get().getFcmTokens(), order);
+					break;
+				}
+				throw new BadRequestException("Invalid OTP");
+
+			default:
+				throw new BadRequestException("Invalid Status");
+
 			}
-			throw new BadRequestException("Invalid OTP");
 
-		case "Delivered":
-			if (order.getCustomerOtp().equalsIgnoreCase(otp)) {
-				order.setStatus(status);
-				order.setDeliveryTime(Instant.now());
-				break;
-			}
-			throw new BadRequestException("Invalid OTP");
+			Order result = orderRepo.save(order);
 
-		default:
-			throw new BadRequestException("Invalid Status");
-
+			return new ResponseEntity<>(new ResultStatus("Success", "Status Updated", result), HttpStatus.OK);
+		}catch(Exception e){
+			return new ResponseEntity<>(new ResultStatus("Error", "Please Login"), HttpStatus.BAD_REQUEST);
 		}
 
-		Order result = orderRepo.save(order);
-
-		return new ResponseEntity<>(new ResultStatus("Success", "Status Updated", result), HttpStatus.OK);
 	}
 
 	@PutMapping("CancelOrder/{orderId}")
@@ -142,8 +181,8 @@ public class OrderResource {
 		Order order = orderRepo.findById(orderId).get();
 
 		if (ids.size() == 0 || ids.isEmpty()) {
-			if(!order.getStatus().equalsIgnoreCase("Cancelled"))
-			order.setStatus("Cancelled");
+			if (!order.getStatus().equalsIgnoreCase("Cancelled"))
+				order.setStatus("Cancelled");
 			for (ProductDTO pro : order.getItems()) {
 				ids.add(pro.getId());
 			}
@@ -185,6 +224,22 @@ public class OrderResource {
 		return new ResponseEntity<>(new ResultStatus("Success", "Order Fetched", orderRepo.findById(id).get()),
 				HttpStatus.OK);
 	}
+//
+//	@GetMapping("/driverPendingOrders/{id}")
+//	public ResponseEntity<?> getPendingOrderForDriver(@PathVariable("id") String id) throws BadRequestException {
+//
+//		log.debug("rest request to get order by id.");
+//
+//		if (!userRepo.findById(id).isPresent() && !userRepo.findById(id).get().getAuthorities()
+//				.contains(authRepo.findById(AuthoritiesConstants.DELIVERER).get()))
+//			throw new BadRequestException("driver not found");
+//		User user=userRepo.findById(id).get();
+//
+//		return new ResponseEntity<>(new ResultStatus("Success", "Order Fetched", orderRepo.findByDriverAssignedAndLocationNear(false, new Point(user.getAddress()., filter.getLongitude()),
+//				new Distance(filter.getDistance(), Metrics.KILOMETERS))),
+//				HttpStatus.OK);
+//	}
+
 
 	@DeleteMapping("/removeOrderById/{id}")
 	public ResponseEntity<?> removeOrderById(@PathVariable("id") String id) throws BadRequestException {
@@ -200,26 +255,15 @@ public class OrderResource {
 	}
 
 	@GetMapping("vendorOrders/{id}")
-	public ResponseEntity<?> vendorOrders(@PathVariable("id") String id) throws BadRequestException{
-		
+	public ResponseEntity<?> vendorOrders(@PathVariable("id") String id, @RequestParam("page") int page)
+			throws BadRequestException {
+
 		log.debug("rest request to cancel order by id");
-		
-		Criteria criteria = new Criteria();
-		
-		criteria.andOperator(Criteria.where("organisationId").is(id));
-		
-		Query query = new Query(criteria);
-		
-		List<Object> codes = mongoTemplate.findDistinct(query, "_id", "products", Object.class);
-		
-		List<String> ids=new ArrayList<>();
-		
-		for(Object o : codes)
-			ids.add(o.toString());
-		
-		return new ResponseEntity<>(new ResultStatus("Success","Order Fetched",orderRepo.findByProductIdIn(ids, PageRequest.of(0, 10))),HttpStatus.OK);
+
+		return new ResponseEntity<>(
+				new ResultStatus("Success", "Order Fetched", orderRepo.findAllByOrgId(id, PageRequest.of(page, 10))),
+				HttpStatus.OK);
 	}
-	
 
 	public void validateItemList(Order order) throws BadRequestException {
 		double price = 0;
@@ -326,6 +370,76 @@ public class OrderResource {
 
 		}
 		return order;
+	}
+
+	public List<Order> vendorWise(Order order) {
+		List<String> orgIds = new ArrayList<>();
+		List<Order> orders = new ArrayList<Order>();
+		List<Order> forder = new ArrayList<Order>();
+
+		for (ProductDTO product : order.getItems()) {
+
+			Order o = new Order();
+			List<ProductDTO> items = new ArrayList<ProductDTO>();
+			items.add(product);
+			o.setBillingAddress(order.getBillingAddress());
+			o.setDeliveryAddress(order.getDeliveryAddress());
+			o.setCouponCode(order.getCouponCode());
+			o.setDiscount(order.getDiscount());
+			o.setDiscountedAmount(order.getDiscountedAmount() / order.getItems().size());
+			o.setUserId(order.getUserId());
+			o.setPrice(product.getDiscountPrice());
+			o.setOrgId(proRepo.findById(product.getProductId()).get().getOrganisationId());
+			o.setItems(items);
+
+			o.setCustomerOtp(RandomUtil.generateOTP());
+
+			o.setVendorOtp(RandomUtil.generateOTP());
+
+			o.setOrderNo(RandomUtil.generateOrderNo());
+
+			while (orderRepo.findOneByOrderNo(order.getOrderNo()).isPresent())
+				order.setOrderNo(RandomUtil.generateOrderNo());
+
+			orders.add(o);
+
+		}
+
+		for (Order or : orders) {
+
+			if (!orgIds.contains(or.getOrgId()))
+				orgIds.add(or.getOrgId());
+
+		}
+
+		for (String id : orgIds) {
+			Order o = new Order();
+			List<ProductDTO> product = new ArrayList<ProductDTO>();
+			for (Order or : orders) {
+
+				if (id.equalsIgnoreCase(or.getOrgId())) {
+					product.add(or.getItems().get(0));
+					o.setBillingAddress(or.getBillingAddress());
+					o.setDeliveryAddress(or.getDeliveryAddress());
+					o.setCouponCode(or.getCouponCode());
+					o.setDiscount(or.getDiscount());
+					o.setDiscountedAmount((o.getDiscountedAmount()) + or.getDiscountedAmount());
+					o.setUserId(or.getUserId());
+					o.setPrice(o.getPrice() + or.getPrice());
+					o.setOrgId(id);
+					o.setItems(product);
+
+					o.setCustomerOtp(or.getCustomerOtp());
+
+					o.setVendorOtp(or.getVendorOtp());
+
+					o.setOrderNo(or.getOrderNo());
+
+				}
+			}
+			forder.add(orderRepo.save(o));
+		}
+		return forder;
 	}
 
 }

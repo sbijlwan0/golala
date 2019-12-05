@@ -1,9 +1,12 @@
 package com.easygo.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +18,15 @@ import com.easygo.domain.Order;
 public interface OrderRepository extends MongoRepository<Order,String> {
 
 	Page<Order> findAllByReturnOrder(@Param("returnOrder")boolean returnOrder, Pageable pageable);
+	
+	Optional<Order> findOneByOrderNo(@Param("orderNo")String orderNo);
+	
+	Page<Order> findByDelivererId(@Param("delivererId")String delivererId,Pageable pageable);
+	
+	Page<Order> findAllByOrgId(@Param("orgId")String orgId,Pageable pageable);
+	
+	List<Order> findByDriverAssignedAndLocationNear(@Param("driverAssigned") boolean driverAssigned,
+			@Param("point") Point point, @Param("d") Distance d);
 	
 	Page<Order> findByReturnOrderAndUserId(@Param("returnOrder")boolean returnOrder, @Param("userId")String userId, Pageable pageable);
 	

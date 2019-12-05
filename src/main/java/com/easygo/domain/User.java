@@ -5,6 +5,9 @@ import com.easygo.config.Constants;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -14,6 +17,7 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -82,9 +86,12 @@ public class User extends AbstractAuditingEntity implements Serializable {
     private Set<Authority> authorities = new HashSet<>();
     
     @JsonIgnore
-    private List<String>fcmTokens;
+    private List<String>fcmTokens=new ArrayList<>();
     
     private String otp;
+    
+    @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
+    private GeoJsonPoint liveLocation;
     
     
     
@@ -161,7 +168,15 @@ public class User extends AbstractAuditingEntity implements Serializable {
 
     
 
-    public String getEmail() {
+    public GeoJsonPoint getLiveLocation() {
+		return liveLocation;
+	}
+
+	public void setLiveLocation(GeoJsonPoint liveLocation) {
+		this.liveLocation = liveLocation;
+	}
+
+	public String getEmail() {
         return email;
     }
 

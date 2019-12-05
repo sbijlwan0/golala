@@ -1,12 +1,25 @@
 package com.easygo.service.dto;
 
 public class AttributeDTO {
+
+	private String attributeSet;
 	
 	private String attributeLabel;
 	
-	private Object value;
+	private String value;
 	
 	private String viewType;
+	
+
+	
+	
+	public String getAttributeSet() {
+		return attributeSet;
+	}
+
+	public void setAttributeSet(String attributeSet) {
+		this.attributeSet = attributeSet;
+	}
 
 	public String getAttributeLabel() {
 		return attributeLabel;
@@ -16,11 +29,14 @@ public class AttributeDTO {
 		this.attributeLabel = attributeLabel;
 	}
 
-	public Object getValue() {
+
+
+
+	public String getValue() {
 		return value;
 	}
 
-	public void setValue(Object value) {
+	public void setValue(String value) {
 		this.value = value;
 	}
 

@@ -230,16 +230,17 @@ public class ProductResource {
 			AttributeDTO att = new AttributeDTO();
 			att.setAttributeLabel(attr.getAttributeLabel());
 			att.setViewType(attr.getViewType());
-			List<String> value = new ArrayList<>();
+//			String value ;
 			for (int i = 0; i < prod.getSubProduct().size(); i++) {
 				for (int j = 0; j < prod.getSubProduct().get(i).getAttributes().size(); j++) {
 					if (prod.getSubProduct().get(i).getAttributes().get(j).getAttributeLabel()
 							.equalsIgnoreCase(att.getAttributeLabel()))
-						value.add(prod.getSubProduct().get(i).getAttributes().get(j).getValue().toString());
+						att.setValue(prod.getSubProduct().get(i).getAttributes().get(j).getValue());
+					finalList.add(att);
 				}
 			}
-			att.setValue(value);
-			finalList.add(att);
+//			att.setValue(value);
+			
 		}
 		return finalList;
 	}

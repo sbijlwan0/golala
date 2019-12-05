@@ -10,6 +10,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 
 import com.easygo.service.dto.ProductDTO;
 
@@ -23,10 +24,17 @@ public class Order extends AbstractAuditingEntity implements Serializable{
     
     private String orderId;
     
+    private String orderNo;
+    
     @NotNull
     private String userId;
     
     private String delivererId;
+    
+//    @DBRef
+//    private User driver;
+    
+    private String orgId;
     
     private List<ProductDTO> items;
     
@@ -59,7 +67,20 @@ public class Order extends AbstractAuditingEntity implements Serializable{
     
     private double subTotal;
     
+    private boolean driverAssigned=false;
     
+    
+
+    
+    
+    
+	public boolean isDriverAssigned() {
+		return driverAssigned;
+	}
+
+	public void setDriverAssigned(boolean driverAssigned) {
+		this.driverAssigned = driverAssigned;
+	}
 
 	public String getId() {
 		return id;
@@ -213,6 +234,22 @@ public class Order extends AbstractAuditingEntity implements Serializable{
 
 	public void setSubTotal(double subTotal) {
 		this.subTotal = subTotal;
+	}
+
+	public String getOrgId() {
+		return orgId;
+	}
+
+	public void setOrgId(String orgId) {
+		this.orgId = orgId;
+	}
+
+	public String getOrderNo() {
+		return orderNo;
+	}
+
+	public void setOrderNo(String orderNo) {
+		this.orderNo = orderNo;
 	}
     
     

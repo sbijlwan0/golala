@@ -42,4 +42,10 @@ public final class RandomUtil {
     public static String generateOTP() {
         return RandomStringUtils.randomNumeric(4);
     }
+    
+    public static String generateOrderNo() {
+        String n= RandomStringUtils.randomNumeric(12);
+        n=n.substring(0,3)+"-"+n.substring(3, 8)+"-"+n.substring(8);
+        return n;
+    }
 }
