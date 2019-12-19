@@ -6,6 +6,8 @@ public class ProductDTO {
 	
 	private int id;
 	
+	private String sku;
+	
 	private String name;
 	
 	private List<String> images;
@@ -34,6 +36,16 @@ public class ProductDTO {
 	
 	
 	
+
+	
+	
+	public String getSku() {
+		return sku;
+	}
+
+	public void setSku(String sku) {
+		this.sku = sku;
+	}
 
 	public int getId() {
 		return id;

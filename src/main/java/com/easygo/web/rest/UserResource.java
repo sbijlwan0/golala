@@ -162,8 +162,12 @@ public class UserResource {
     @GetMapping("/updateToken/{token}")
     public ResponseEntity<?> updateToken(@PathVariable("token")String token) {
         log.debug("REST request to update fcm token : {}");
-        User user=userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
-        
+        User user=new User();
+        try {
+         user=userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
+        }catch(Exception a) {
+        	return new ResponseEntity<>(new ResultStatus("Error","User Not Found"),HttpStatus.OK);
+        }
         if(user.getFcmTokens().isEmpty())
         	user.getFcmTokens().add(token);
         else
@@ -171,7 +175,7 @@ public class UserResource {
         		user.getFcmTokens().add(token);
         
         userRepository.save(user);
-        return new ResponseEntity<>(userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get(),HttpStatus.OK);
+        return new ResponseEntity<>(new ResultStatus("Success","Token Updated",userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get()),HttpStatus.OK);
        
     }
     
@@ -179,10 +183,15 @@ public class UserResource {
     @GetMapping("/removeToken/{token}")
     public ResponseEntity<?> removeToken(@PathVariable("token")String token) {
         log.debug("REST request to remove fcm token : {}");
-        User user=userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
+        User user=new User();
+        try {
+         user=userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
+        }catch(Exception a) {
+        	return new ResponseEntity<>(new ResultStatus("Error","User Not Found"),HttpStatus.OK);
+        }
         user.getFcmTokens().remove(token);
         userRepository.save(user);
-        return new ResponseEntity<>(userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get(),HttpStatus.OK);
+        return new ResponseEntity<>(new ResultStatus("Success","Token Updated",userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get()),HttpStatus.OK);
        
     }
 
@@ -206,6 +215,16 @@ public class UserResource {
     	if(auth.equalsIgnoreCase("ROLE_ADMIN"))
     		throw new BadRequestException("Forbidden");
     	Page<User>user=userRepository.findAllByAuthoritiesContains(authRepo.findById(auth).get(), PageRequest.of(page, 10));
+    	
+    	return new ResponseEntity<>(user,HttpStatus.OK);
+    }
+    
+    
+    @GetMapping("pendingDrivers/{page}")
+    public ResponseEntity<?> getPendingDrivers(@PathVariable("page") int page) throws BadRequestException{
+    	
+    	
+    	Page<User>user=userRepository.findAllByActivatedIsFalseAndAuthoritiesContains(authRepo.findById(AuthoritiesConstants.DELIVERER).get(), PageRequest.of(page, 10));
     	
     	return new ResponseEntity<>(user,HttpStatus.OK);
     }

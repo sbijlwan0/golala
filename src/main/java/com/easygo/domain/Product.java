@@ -19,6 +19,8 @@ public class Product extends AbstractAuditingEntity implements Serializable{
     @Id
     private String id;
     
+    private String sku;
+    
     @NotNull
     private String organisationId;
     
@@ -42,6 +44,19 @@ public class Product extends AbstractAuditingEntity implements Serializable{
     private double rating;
     
     private double tax;
+    
+    
+    
+    
+    
+
+	public String getSku() {
+		return sku;
+	}
+
+	public void setSku(String sku) {
+		this.sku = sku;
+	}
 
 	public String getId() {
 		return id;

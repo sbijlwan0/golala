@@ -2,7 +2,9 @@ package com.easygo.web.rest;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.Valid;
 
@@ -10,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
@@ -39,6 +42,7 @@ import com.easygo.repository.UserRepository;
 import com.easygo.security.AuthoritiesConstants;
 import com.easygo.security.SecurityUtils;
 import com.easygo.service.PushService;
+import com.easygo.service.dto.Item;
 import com.easygo.service.dto.ProductDTO;
 import com.easygo.service.dto.ResultStatus;
 import com.easygo.service.dto.SubProduct;
@@ -84,30 +88,30 @@ public class OrderResource {
 		if (null != order.getId() || order.isReturnOrder())
 			throw new BadRequestException("Invalid Order.");
 
-		validateItemList(order);
+		Order or=validateItemList(order);
 
 		List<Order> orders = new ArrayList<Order>();
 
-		orders = vendorWise(order);
+		orders = vendorWise(or);
 
 		Cart cart = cartRepo.findByUserId(order.getUserId()).get();
 		List<ProductDTO> items = new ArrayList<>();
 		cart.setItems(items);
 		cartRepo.save(cart);
 
-		for (Order or : orders) {
-
-			push.sendOrderPlacedPush(userRepo.findById(order.getUserId()).get().getFcmTokens(), or);
-			push.sendOrderPlacedPush(orgRepo.findById(order.getOrgId()).get().getVendor().getFcmTokens(), or);
-			List<User> users = userRepo.findAllByAuthoritiesContainsAndLiveLocationNear(
-					authRepo.findById(AuthoritiesConstants.DELIVERER).get(),
-					new Point(orgRepo.findById(order.getOrgId()).get().getLocation().getX(),
-							orgRepo.findById(order.getOrgId()).get().getLocation().getY()),
-					new Distance(7, Metrics.KILOMETERS));
-
-			for (User user : users)
-				push.sendOrderPlacedPush(user.getFcmTokens(), or);
-		}
+//		for (Order or : orders) {
+//
+//			push.sendOrderPlacedPush(userRepo.findById(or.getUserId()).get().getFcmTokens(), or);
+//			push.sendOrderPlacedPush(orgRepo.findById(or.getOrgId()).get().getVendor().getFcmTokens(), or);
+//			List<User> users = userRepo.findAllByAuthoritiesContainsAndLiveLocationNear(
+//					authRepo.findById(AuthoritiesConstants.DELIVERER).get(),
+//					new Point(orgRepo.findById(or.getOrgId()).get().getLocation().getX(),
+//							orgRepo.findById(or.getOrgId()).get().getLocation().getY()),
+//					new Distance(7, Metrics.KILOMETERS));
+//
+//			for (User user : users)
+//				push.sendOrderPlacedPush(user.getFcmTokens(), or);
+//		}
 
 		return new ResponseEntity<>(new ResultStatus("Success", "Order Placed", orders), HttpStatus.CREATED);
 	}
@@ -130,7 +134,7 @@ public class OrderResource {
 		return new ResponseEntity<>(new ResultStatus("Success", "Order Updated", result), HttpStatus.OK);
 	}
 
-	@PutMapping("updateOrderStatus/{otp}/{status}")
+	@PutMapping("/updateOrderStatus/{otp}/{status}")
 	public ResponseEntity<?> verifyOrderOTP(@PathVariable("otp") String otp, @PathVariable("status") String status,
 			@RequestBody Order order) throws BadRequestException {
 
@@ -173,7 +177,7 @@ public class OrderResource {
 
 	}
 
-	@PutMapping("CancelOrder/{orderId}")
+	@PutMapping("/CancelOrder/{orderId}")
 	public ResponseEntity<?> cancelOrder(@PathVariable("orderId") String orderId, @RequestBody List<Integer> ids) {
 
 		log.debug("rest request to cancel Order");
@@ -189,28 +193,43 @@ public class OrderResource {
 		}
 
 		order = updateProduct(order, ids);
+		
+		int n=0;
+		for(ProductDTO item:order.getItems())
+			if(item.getStatus().equalsIgnoreCase("Cancelled"))
+				n++;
+		
+		if(order.getItems().size()==n)
+			order.setStatus("Cancelled");
 
 		Order result = orderRepo.save(order);
 
 		return new ResponseEntity<>(new ResultStatus("Success", "Order Cancelled", result), HttpStatus.OK);
 	}
+	
+	
+
 
 	@GetMapping("/order/{page}")
 	public ResponseEntity<?> getAllOrder(@PathVariable("page") int page) {
 
 		log.debug("rest request to get All order.");
+		
+		Sort sort = new Sort(Sort.Direction.DESC,"created_date");
 
 		return new ResponseEntity<>(new ResultStatus("Success", "Order Fetched",
-				orderRepo.findAllByReturnOrder(false, PageRequest.of(page, 10))), HttpStatus.OK);
+				orderRepo.findAllByReturnOrder(false, PageRequest.of(page, 10,sort))), HttpStatus.OK);
 	}
 
 	@GetMapping("/orderByUserId/{userId}/{page}")
 	public ResponseEntity<?> getOrderByUser(@PathVariable("userId") String userId, @PathVariable("page") int page) {
 
 		log.debug("rest request to get order by user.");
+		
+		Sort sort = new Sort(Sort.Direction.DESC,"created_date");
 
 		return new ResponseEntity<>(new ResultStatus("Success", "Order Fetched",
-				orderRepo.findByReturnOrderAndUserId(false, userId, PageRequest.of(page, 10))), HttpStatus.OK);
+				orderRepo.findByReturnOrderAndUserId(false, userId, PageRequest.of(page, 10,sort))), HttpStatus.OK);
 	}
 
 	@GetMapping("/orderById/{id}")
@@ -265,7 +284,7 @@ public class OrderResource {
 				HttpStatus.OK);
 	}
 
-	public void validateItemList(Order order) throws BadRequestException {
+	public Order validateItemList(Order order) throws BadRequestException {
 		double price = 0;
 		for (int n = 1; n < 3; n++) {
 			for (ProductDTO product : order.getItems()) {
@@ -287,6 +306,9 @@ public class OrderResource {
 								subPro.setQuantity(subPro.getQuantity() - product.getQuantity());
 								price = price + (subPro.getDiscountPrice() * product.getQuantity());
 							}
+							else {
+								product.setStatus("Cancelled - insufficient product quatity");
+							}
 
 					}
 				}
@@ -294,6 +316,7 @@ public class OrderResource {
 					proRepo.save(pro);
 			}
 		}
+		return order;
 //		if (!order.getStatus().equalsIgnoreCase("Cancelled"))
 //			if(null!=order.getCouponCode())
 //			price = price - order.getDiscount();
@@ -358,8 +381,12 @@ public class OrderResource {
 		for (ProductDTO product : order.getItems()) {
 
 			if (ids.contains(product.getId())) {
-				Product pro = proRepo.findById(product.getProductId()).get();
-
+				Product pro=new Product();
+				try {
+				pro = proRepo.findById(product.getProductId()).get();
+				}catch(Exception e) {
+					System.out.println("product "+product.getName()+" "+"not found in database.");
+				}
 				for (SubProduct spro : pro.getSubProduct())
 					if (spro.getId() == product.getSubProductId())
 						spro.setQuantity(spro.getQuantity() + product.getQuantity());
@@ -414,6 +441,7 @@ public class OrderResource {
 
 		for (String id : orgIds) {
 			Order o = new Order();
+			o.setLocation(orgRepo.findById(id).get().getLocation());
 			List<ProductDTO> product = new ArrayList<ProductDTO>();
 			for (Order or : orders) {
 

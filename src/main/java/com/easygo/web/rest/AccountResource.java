@@ -147,11 +147,13 @@ public class AccountResource {
 	}
 
 	@GetMapping("/activate")
-	public void activateAccount(@RequestParam(value = "key") String key) {
-		Optional<User> user = userService.activateRegistration(key);
+	public ResponseEntity<?> activateAccount(@RequestParam(value = "key") String key) {
+		User use=userRepository.findById(key).get();
+		Optional<User> user = userService.activateRegistration(use.getActivationKey());
 		if (!user.isPresent()) {
 			throw new AccountResourceException("No user was found for this activation key");
 		}
+		return new ResponseEntity<>(new ResultStatus("Success", "User Activated", user), HttpStatus.OK);	
 	}
 
 	/**

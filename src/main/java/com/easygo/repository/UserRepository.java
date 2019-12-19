@@ -36,6 +36,8 @@ public interface UserRepository extends MongoRepository<User, String> {
     
     Page<User> findAllByAuthoritiesContains(Authority auth,Pageable pageable);
     
+    Page<User> findAllByActivatedIsFalseAndAuthoritiesContains(Authority auth,Pageable pageable);
+    
     List<User> findAllByAuthoritiesContainsAndLiveLocationNear(@Param("authorities")Authority authorities,@Param("point") Point point, @Param("d") Distance d);
     
     Page<User> findAllByActivatedIsFalse(Pageable pageable);

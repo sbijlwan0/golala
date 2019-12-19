@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,6 +26,7 @@ import com.easygo.repository.OrderRepository;
 import com.easygo.repository.UserRepository;
 import com.easygo.security.AuthoritiesConstants;
 import com.easygo.security.SecurityUtils;
+import com.easygo.service.dto.Filters;
 import com.easygo.service.dto.ResultStatus;
 
 import io.undertow.util.BadRequestException;
@@ -93,8 +96,8 @@ public class DriverResource {
 		}
 	}
 	
-	@GetMapping("/availableOrders")
-	public ResponseEntity<?> viewAvailableOrders()
+	@PostMapping("/availableOrders")
+	public ResponseEntity<?> viewAvailableOrders(@RequestBody Filters filter)
 			throws BadRequestException {
 
 		log.debug("rest request to view available orders");
@@ -106,8 +109,8 @@ public class DriverResource {
 				return new ResponseEntity<>(new ResultStatus("Error", "You are not a golala driver"), HttpStatus.BAD_REQUEST);
 			
 			
-			List<Order>orders=orderRepo.findByDriverAssignedAndLocationNear(false, new Point(user.getLiveLocation().getX(),
-					user.getLiveLocation().getY()),
+			List<Order>orders=orderRepo.findByDriverAssignedAndStatusAndLocationNear(false, "processing", new Point(filter.getLatitude(),
+					filter.getLongitude()),
 			new Distance(7, Metrics.KILOMETERS));
 			
 			return new ResponseEntity<>(new ResultStatus("Success", "orders Fetched",orders), HttpStatus.OK);

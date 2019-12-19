@@ -132,8 +132,10 @@ public class UserService {
         authorityRepository.findById(AuthoritiesConstants.VENDOR).ifPresent(authorities::add);
         otpService.sendOtp(userDTO.getMobile(), 0);
         }
-        else if(managedUserVM.getType().equalsIgnoreCase("driver"))
+        else if(managedUserVM.getType().equalsIgnoreCase("driver")) {
             authorityRepository.findById(AuthoritiesConstants.DELIVERER).ifPresent(authorities::add);
+//            otpService.sendOtp(userDTO.getMobile(), 0);
+        }
         newUser.setAuthorities(authorities);
         userRepository.save(newUser);
         log.debug("Created Information for User: {}", newUser);
@@ -249,6 +251,26 @@ public class UserService {
             })
             .map(UserDTO::new);
     }
+    
+   public UserDTO getUserDTO(User user) {
+	   
+	   UserDTO userDTO=new UserDTO();
+	   userDTO.setId(user.getId());
+	   userDTO.setLogin(user.getLogin());
+	   userDTO.setFirstName(user.getFirstName());
+	   userDTO.setMobile(user.getMobile());
+	   userDTO.setAddress(user.getAddress());
+	   userDTO.setEmail(user.getEmail());
+	   userDTO.setImageUrl(user.getImageUrl());
+	   userDTO.setActivated(user.getActivated());
+	   userDTO.setLangKey(user.getLangKey());
+	   userDTO.setOtp(user.getOtp());
+	   Set<String>authorities=new HashSet<>();
+	   for(Authority auth:user.getAuthorities())
+		   authorities.add(auth.getName());
+	   userDTO.setAuthorities(authorities);
+	   return userDTO;
+   }
 
     public void deleteUser(String login) {
         userRepository.findOneByLogin(login).ifPresent(user -> {

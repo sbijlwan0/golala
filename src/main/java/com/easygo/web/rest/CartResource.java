@@ -1,6 +1,7 @@
 package com.easygo.web.rest;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -20,12 +21,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.easygo.domain.Cart;
+import com.easygo.domain.Product;
 import com.easygo.domain.User;
 import com.easygo.repository.CartRepository;
+import com.easygo.repository.ProductRepository;
 import com.easygo.repository.UserRepository;
 import com.easygo.security.SecurityUtils;
 import com.easygo.service.dto.ProductDTO;
 import com.easygo.service.dto.ResultStatus;
+import com.easygo.service.dto.SubProduct;
 
 import io.undertow.util.BadRequestException;
 
@@ -40,6 +44,9 @@ public class CartResource {
 	
 	@Autowired
 	CartRepository cartRepo;
+	
+	@Autowired
+	ProductRepository proRepo;
 
 	@PostMapping("/cart")
 	public ResponseEntity<?> createCart(@Valid @RequestBody ProductDTO product) throws BadRequestException {
@@ -55,6 +62,7 @@ public class CartResource {
 		User user=userRepo.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
 		
 		Cart cart=new Cart();
+		boolean is=false;
 		
 		if(cartRepo.findByUserId(user.getId()).isPresent()) {
 			cart=cartRepo.findByUserId(user.getId()).get();
@@ -62,8 +70,21 @@ public class CartResource {
 			List<ProductDTO> pros=new ArrayList<ProductDTO>();
 			pros.add(product);
 			cart.setItems(pros);}
-			else
-				cart.getItems().add(product);
+			else {
+//				Product prod=proRepo.findById(product.getProductId()).get();
+				for(ProductDTO pro:cart.getItems()) {
+					if(pro.getProductId().equalsIgnoreCase(product.getProductId()))
+//						for(SubProduct item : prod.getSubProduct())
+							if(product.getSubProductId()==pro.getSubProductId()) {
+								pro.setQuantity(pro.getQuantity()+product.getQuantity());
+								is=true;
+							}
+				}
+				if(is==false)
+					cart.getItems().add(product);
+				
+			}
+				
 		}
 			
 		else {
@@ -130,6 +151,62 @@ public class CartResource {
 		return new ResponseEntity<>(new ResultStatus("Success", "Cart Fetched", cartRepo.findByUserId(userId).get()),
 				HttpStatus.OK);
 	}
+	
+	
+	@GetMapping("/getCartProducts")
+	public ResponseEntity<?> getCartProducts(){
+
+		log.debug("rest request to get cart Products");
+		
+		try {
+		User user=userRepo.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
+		
+		List<Product>products=new ArrayList<Product>();
+		
+		Cart cart=cartRepo.findByUserId(user.getId()).get();
+		for(ProductDTO pro:cart.getItems()) {
+			try {
+			Product prod=proRepo.findById(pro.getProductId()).get();
+			products.add(prod);
+			}catch(Exception a) {
+				products.add(null);
+			}
+		}
+		return new ResponseEntity<>(new ResultStatus("Success", "Products Fetched", products),HttpStatus.OK);
+			
+		}catch(Exception a) {
+			return new ResponseEntity<>(new ResultStatus("Error", "Login First"),HttpStatus.BAD_REQUEST);
+		}
+
+	}
+	
+	
+	@GetMapping("/isInCart/{userId}/{productId}")
+	public ResponseEntity<?> isProductInCart(@PathVariable("userId")String userId, @PathVariable("productId") String productId){
+		
+		log.debug("is the product in cart");
+		HashMap<Integer, Boolean> result=new HashMap<>();
+		
+		Cart cart=cartRepo.findByUserId(userId).get();
+		
+		Product prod=proRepo.findById(productId).get();
+		
+		for(ProductDTO pro:cart.getItems()) {
+			if(pro.getProductId().equalsIgnoreCase(productId))
+				for(SubProduct item : prod.getSubProduct())
+					if(item.getId()==pro.getSubProductId()) {
+						result.put(item.getId(), true);
+					}
+					else {
+						result.put(item.getId(), false);
+					}
+						
+		}
+		
+		return new ResponseEntity<>(new ResultStatus("Success", "Order Fetched",result), HttpStatus.OK);
+		
+	}
+	
 
 	@DeleteMapping("/cart/{cartId}/{id}")
 	public ResponseEntity<?> removeCart(@PathVariable("cartId") String cartId,@PathVariable("id") int id) throws BadRequestException {

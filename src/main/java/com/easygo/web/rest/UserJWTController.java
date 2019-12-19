@@ -23,7 +23,9 @@ import com.easygo.repository.UserRepository;
 import com.easygo.security.jwt.JWTFilter;
 import com.easygo.security.jwt.TokenProvider;
 import com.easygo.service.OtpService;
+import com.easygo.service.UserService;
 import com.easygo.service.dto.ResultStatus;
+import com.easygo.service.dto.UserDTO;
 import com.easygo.web.rest.vm.LoginVM;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -36,6 +38,9 @@ public class UserJWTController {
 
 	@Autowired
 	UserRepository userRepository;
+	
+	@Autowired
+	UserService userService;
 
 	@Autowired
 	OtpService otpService;
@@ -124,7 +129,9 @@ public class UserJWTController {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.add(JWTFilter.AUTHORIZATION_HEADER, "Bearer " + jwt);
 
-		return new ResponseEntity<>(new JWTToken(jwt, existingUser), httpHeaders, HttpStatus.OK);
+		UserDTO user=userService.getUserDTO(existingUser);	
+		
+		return new ResponseEntity<>(new JWTToken(jwt, user), httpHeaders, HttpStatus.OK);
 	}
 
 	/**
@@ -134,9 +141,9 @@ public class UserJWTController {
 
 		private String idToken;
 
-		private User user;
+		private UserDTO user;
 
-		JWTToken(String idToken, User user) {
+		JWTToken(String idToken, UserDTO user) {
 			this.idToken = idToken;
 			this.user = user;
 		}
@@ -150,11 +157,11 @@ public class UserJWTController {
 			this.idToken = idToken;
 		}
 
-		public User getUser() {
+		public UserDTO getUser() {
 			return user;
 		}
 
-		public void setUser(User user) {
+		public void setUser(UserDTO user) {
 			this.user = user;
 		}
 	}
