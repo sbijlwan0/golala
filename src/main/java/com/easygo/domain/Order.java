@@ -40,7 +40,7 @@ public class Order extends AbstractAuditingEntity implements Serializable{
     
     private double price;
     
-    private String status="processing";
+    private String status="Processing";
     
     private String vendorOtp;
     

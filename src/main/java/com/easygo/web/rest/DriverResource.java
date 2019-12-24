@@ -23,6 +23,7 @@ import com.easygo.domain.Order;
 import com.easygo.domain.User;
 import com.easygo.repository.AuthorityRepository;
 import com.easygo.repository.OrderRepository;
+import com.easygo.repository.OrganisationRepository;
 import com.easygo.repository.UserRepository;
 import com.easygo.security.AuthoritiesConstants;
 import com.easygo.security.SecurityUtils;
@@ -45,6 +46,9 @@ public class DriverResource {
 	
 	@Autowired
 	AuthorityRepository authRepo;
+	
+	@Autowired
+	OrganisationRepository orgRepo;
 	
 	@GetMapping("/driverOrders")
 	public ResponseEntity<?> getOrderForDriver(@RequestParam("page") int page)
@@ -120,16 +124,16 @@ public class DriverResource {
 		}
 	}
 	
-	@GetMapping("/cancelOrder/{orderId}")
-	public ResponseEntity<?> cancelOrder(@PathVariable("orderId") String orderId)
+	@GetMapping("/cancelDriver/{orderId}")
+	public ResponseEntity<?> cancelDriver(@PathVariable("orderId") String orderId)
 			throws BadRequestException {
 
-		log.debug("rest request to accept order by id.");
+		log.debug("rest request to Cancel order by id.");
 		
 		try {
 			User user=userRepo.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
 			
-			if(!user.getAuthorities().contains(authRepo.findById(AuthoritiesConstants.DELIVERER).get()))
+			if(!user.getAuthorities().contains(authRepo.findById(AuthoritiesConstants.DELIVERER).get()) && !user.getAuthorities().contains(authRepo.findById(AuthoritiesConstants.VENDOR).get()))
 				return new ResponseEntity<>(new ResultStatus("Error", "You are not a golala driver"), HttpStatus.BAD_REQUEST);
 			
 			Order order=orderRepo.findById(orderId).get();
@@ -138,15 +142,16 @@ public class DriverResource {
 				return new ResponseEntity<>(new ResultStatus("Error", "You cannot cancel this order now. as you have picked the package."), HttpStatus.BAD_REQUEST);
 			
 			if(!order.getDelivererId().equalsIgnoreCase(user.getId()))
+				if(!user.getId().equalsIgnoreCase(orgRepo.findById(order.getOrgId()).get().getVendorId()))
 				return new ResponseEntity<>(new ResultStatus("Error", "You are not eligible to perform action in this order."), HttpStatus.BAD_REQUEST);
 			
-			order.setDelivererId(user.getId());
+			order.setDelivererId(null);
 			
-			order.setDriverAssigned(true);
+			order.setDriverAssigned(false);
 			
 			Order result = orderRepo.save(order);
 			
-			return new ResponseEntity<>(new ResultStatus("Success", "Driver Accepted",result), HttpStatus.OK);
+			return new ResponseEntity<>(new ResultStatus("Success", "Order Cancelled",result), HttpStatus.OK);
 			
 		}catch(Exception e){
 			return new ResponseEntity<>(new ResultStatus("Error", "Please Login"), HttpStatus.BAD_REQUEST);

@@ -25,6 +25,8 @@ public interface OrderRepository extends MongoRepository<Order,String> {
 	
 	Page<Order> findAllByOrgId(@Param("orgId")String orgId,Pageable pageable);
 	
+	Page<Order> findAllByOrgIdIn(@Param("orgIds")List<String> orgId,Pageable pageable);
+	
 	List<Order> findByDriverAssignedAndStatusAndLocationNear(@Param("driverAssigned") boolean driverAssigned,@Param("status")String status,
 			@Param("point") Point point, @Param("d") Distance d);
 	

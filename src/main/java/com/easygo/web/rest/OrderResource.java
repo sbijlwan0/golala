@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.easygo.domain.Cart;
 import com.easygo.domain.Order;
+import com.easygo.domain.Organisation;
 import com.easygo.domain.Product;
 import com.easygo.domain.User;
 import com.easygo.repository.AuthorityRepository;
@@ -149,7 +150,7 @@ public class OrderResource {
 			case "Picked":
 				if (order.getVendorOtp().equalsIgnoreCase(otp)) {
 					order.setStatus(status);
-					push.sendOrderPickedPush(orgRepo.findById(order.getOrgId()).get().getVendor().getFcmTokens(), order);
+//					push.sendOrderPickedPush(orgRepo.findById(order.getOrgId()).get().getVendor().getFcmTokens(), order);
 					break;
 				}
 				throw new BadRequestException("Invalid OTP");
@@ -158,7 +159,7 @@ public class OrderResource {
 				if (order.getCustomerOtp().equalsIgnoreCase(otp)) {
 					order.setStatus(status);
 					order.setDeliveryTime(Instant.now());
-					push.sendOrderPickedPush(userRepo.findById(order.getUserId()).get().getFcmTokens(), order);
+//					push.sendOrderPickedPush(userRepo.findById(order.getUserId()).get().getFcmTokens(), order);
 					break;
 				}
 				throw new BadRequestException("Invalid OTP");
@@ -273,14 +274,36 @@ public class OrderResource {
 		return new ResponseEntity<>(new ResultStatus("Success", "Order Removed"), HttpStatus.OK);
 	}
 
+	@GetMapping("vendorOrdersByOrgId/{orgId}")
+	public ResponseEntity<?> vendorOrdersByOrgId(@PathVariable("orgId") String orgId, @RequestParam("page") int page)
+			throws BadRequestException {
+
+		log.debug("rest request to cancel order by id");
+		Sort sort = new Sort(Sort.Direction.DESC,"created_date");
+
+		return new ResponseEntity<>(
+				new ResultStatus("Success", "Order Fetched", orderRepo.findAllByOrgId(orgId, PageRequest.of(page, 10,sort))),
+				HttpStatus.OK);
+	}
+	
+	
 	@GetMapping("vendorOrders/{id}")
 	public ResponseEntity<?> vendorOrders(@PathVariable("id") String id, @RequestParam("page") int page)
 			throws BadRequestException {
+		
+		Sort sort = new Sort(Sort.Direction.DESC,"created_date");
+		
+		List<Organisation>orgs=orgRepo.findAllByVendorId(id);
+		List<String>ids=new ArrayList<>();
+		
+		for(Organisation org : orgs)
+			ids.add(org.getId());
+	
 
 		log.debug("rest request to cancel order by id");
 
 		return new ResponseEntity<>(
-				new ResultStatus("Success", "Order Fetched", orderRepo.findAllByOrgId(id, PageRequest.of(page, 10))),
+				new ResultStatus("Success", "Order Fetched", orderRepo.findAllByOrgIdIn(ids, PageRequest.of(page, 10,sort))),
 				HttpStatus.OK);
 	}
 
@@ -422,11 +445,12 @@ public class OrderResource {
 			o.setCustomerOtp(RandomUtil.generateOTP());
 
 			o.setVendorOtp(RandomUtil.generateOTP());
-
+			
+			do {
 			o.setOrderNo(RandomUtil.generateOrderNo());
 
-			while (orderRepo.findOneByOrderNo(order.getOrderNo()).isPresent())
-				order.setOrderNo(RandomUtil.generateOrderNo());
+			}while (orderRepo.findOneByOrderNo(o.getOrderNo()).isPresent());
+
 
 			orders.add(o);
 
@@ -460,8 +484,14 @@ public class OrderResource {
 					o.setCustomerOtp(or.getCustomerOtp());
 
 					o.setVendorOtp(or.getVendorOtp());
-
+					try {
 					o.setOrderNo(or.getOrderNo());
+					}catch(Exception a) {
+						do {
+							o.setOrderNo(RandomUtil.generateOrderNo());
+
+							}while (orderRepo.findOneByOrderNo(o.getOrderNo()).isPresent());
+					}
 
 				}
 			}
