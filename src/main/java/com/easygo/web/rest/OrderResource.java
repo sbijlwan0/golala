@@ -153,7 +153,7 @@ public class OrderResource {
 //					push.sendOrderPickedPush(orgRepo.findById(order.getOrgId()).get().getVendor().getFcmTokens(), order);
 					break;
 				}
-				throw new BadRequestException("Invalid OTP");
+				return new ResponseEntity<>(new ResultStatus("Error", "Invalid OTP"), HttpStatus.BAD_REQUEST);
 
 			case "Delivered":
 				if (order.getCustomerOtp().equalsIgnoreCase(otp)) {
@@ -162,10 +162,10 @@ public class OrderResource {
 //					push.sendOrderPickedPush(userRepo.findById(order.getUserId()).get().getFcmTokens(), order);
 					break;
 				}
-				throw new BadRequestException("Invalid OTP");
+				return new ResponseEntity<>(new ResultStatus("Error", "Invalid OTP"), HttpStatus.BAD_REQUEST);
 
 			default:
-				throw new BadRequestException("Invalid Status");
+				return new ResponseEntity<>(new ResultStatus("Error", "Invalid Status"), HttpStatus.BAD_REQUEST);
 
 			}
 

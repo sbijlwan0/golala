@@ -138,11 +138,13 @@ public class DriverResource {
 			
 			Order order=orderRepo.findById(orderId).get();
 			
+			if(!order.isDriverAssigned())
+				return new ResponseEntity<>(new ResultStatus("Error", "Driver not found for this order"), HttpStatus.BAD_REQUEST);
+			
 			if(!order.getStatus().equalsIgnoreCase("processing"))
 				return new ResponseEntity<>(new ResultStatus("Error", "You cannot cancel this order now. as you have picked the package."), HttpStatus.BAD_REQUEST);
 			
-			if(!order.getDelivererId().equalsIgnoreCase(user.getId()))
-				if(!user.getId().equalsIgnoreCase(orgRepo.findById(order.getOrgId()).get().getVendorId()))
+			if(!order.getDelivererId().equalsIgnoreCase(user.getId()) && !user.getId().equalsIgnoreCase(orgRepo.findById(order.getOrgId()).get().getVendorId()))
 				return new ResponseEntity<>(new ResultStatus("Error", "You are not eligible to perform action in this order."), HttpStatus.BAD_REQUEST);
 			
 			order.setDelivererId(null);
