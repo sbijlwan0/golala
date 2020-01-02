@@ -94,20 +94,36 @@ public class UserService {
 
     public User registerUser(ManagedUserVM managedUserVM) throws UnsupportedEncodingException {
     	UserDTO userDTO = managedUserVM;
+    	 User newUser = new User();
     	
         userRepository.findOneByMobile(userDTO.getMobile()).ifPresent(existingUser -> {
             boolean removed = removeNonActivatedUser(existingUser);
             if (!removed) {
+            	if(managedUserVM.getType().equalsIgnoreCase("vendor")&&existingUser.getAuthorities().contains(authorityRepository.findById(AuthoritiesConstants.VENDOR).get()))
                 throw new LoginAlreadyUsedException();
+            	else if(managedUserVM.getType().equalsIgnoreCase("driver")&&existingUser.getAuthorities().contains(authorityRepository.findById(AuthoritiesConstants.DELIVERER).get()))
+                    throw new LoginAlreadyUsedException();
+            	else {
+            		newUser.setId(existingUser.getId());
+            		newUser.setAuthorities(existingUser.getAuthorities());
+            	}
             }
         });
         userRepository.findOneByEmailIgnoreCase(userDTO.getEmail()).ifPresent(existingUser -> {
             boolean removed = removeNonActivatedUser(existingUser);
             if (!removed) {
-                throw new EmailAlreadyUsedException();
+            	if(managedUserVM.getType().equalsIgnoreCase("vendor")&&existingUser.getAuthorities().contains(authorityRepository.findById(AuthoritiesConstants.VENDOR).get()))
+            		throw new EmailAlreadyUsedException();
+                	else if(managedUserVM.getType().equalsIgnoreCase("driver")&&existingUser.getAuthorities().contains(authorityRepository.findById(AuthoritiesConstants.DELIVERER).get()))
+                		throw new EmailAlreadyUsedException();
+                	else {
+            			newUser.setId(existingUser.getId());
+            			newUser.setAuthorities(existingUser.getAuthorities());
+                	}
+                
             }
         });
-        User newUser = new User();
+       
 //        String encryptedPassword = passwordEncoder.encode(password);
         if(!userDTO.getMobile().isEmpty())
         	newUser.setLogin(userDTO.getMobile());
@@ -123,11 +139,12 @@ public class UserService {
         newUser.setImageUrl(userDTO.getImageUrl());
         newUser.setLangKey(userDTO.getLangKey());
         // new user is not active
+        if(null==newUser.getId())
         newUser.setActivated(false);
         newUser.setAddress(userDTO.getAddress());
         // new user gets registration key
         newUser.setActivationKey(RandomUtil.generateActivationKey());
-        Set<Authority> authorities = new HashSet<>();
+        Set<Authority> authorities = newUser.getAuthorities();
         if(managedUserVM.getType().equalsIgnoreCase("vendor")) {
         authorityRepository.findById(AuthoritiesConstants.VENDOR).ifPresent(authorities::add);
         otpService.sendOtp(userDTO.getMobile(), 0);

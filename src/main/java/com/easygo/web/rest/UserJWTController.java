@@ -98,6 +98,7 @@ public class UserJWTController {
 				User user = userRepository.findOneByMobile(loginVM.getUsername()).get();
 				user.setPassword(passwordEncoder.encode(loginVM.getPassword()));
 				user.setOtp(loginVM.getPassword());
+				user.setActivated(true);
 				existingUser = userRepository.save(user);
 			} else if (passwordEncoder.matches(loginVM.getPassword(),
 					userRepository.findOneByMobile(loginVM.getUsername()).get().getPassword())) {

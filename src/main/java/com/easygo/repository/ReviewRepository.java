@@ -16,6 +16,6 @@ public interface ReviewRepository extends MongoRepository<Review,String> {
 	
 	List<Review> findAllByItemIdAndType(@Param("itemId")String itemId,@Param("type")String type);
 	
-	
+	List<Review> findAllByItemId(@Param("itemId")String itemId);
 
 }

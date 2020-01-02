@@ -41,10 +41,13 @@ public class ReviewResource {
 		
 		log.debug("rest request to update Review");
 		
+		if(null!=rev.getId())
+			return new ResponseEntity<>(new ResultStatus("Error","cannot have an id."),HttpStatus.BAD_REQUEST);
+		
 		try {
 			User user = userRepo.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
 			
-			if(!rev.getId().equalsIgnoreCase(user.getId()))
+			if(!rev.getUserId().equalsIgnoreCase(user.getId()))
 				return new ResponseEntity<>(new ResultStatus("Error","Invalid User"),HttpStatus.BAD_REQUEST);
 			
 			if(revRepo.findOneByUserIdAndItemIdAndType(rev.getUserId(), rev.getItemId(), rev.getType()).isPresent())
@@ -67,7 +70,10 @@ public class ReviewResource {
 		try {
 			User user = userRepo.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
 			
-			if(!rev.getId().equalsIgnoreCase(user.getId()))
+			if(null==rev.getId())
+				return new ResponseEntity<>(new ResultStatus("Error","must have an id."),HttpStatus.BAD_REQUEST);
+			
+			if(!rev.getUserId().equalsIgnoreCase(user.getId()))
 				return new ResponseEntity<>(new ResultStatus("Error","Invalid User"),HttpStatus.BAD_REQUEST);
 			
 			if(!revRepo.findOneByUserIdAndItemIdAndType(rev.getUserId(), rev.getItemId(), rev.getType()).isPresent())
@@ -96,7 +102,17 @@ public class ReviewResource {
 		
 		log.debug("rest request to get Review");
 		
-			return new ResponseEntity<>(new ResultStatus("Success","Review Fetched", revRepo.findAll()),HttpStatus.OK);	
+			return new ResponseEntity<>(new ResultStatus("Success","Review Fetched", revRepo.findById(id).get()),HttpStatus.OK);	
+		
+	}
+	
+	
+	@GetMapping("/reviewByItemId/{id}")
+	public ResponseEntity<?> getReviewByItemId(@PathVariable("id")String id){
+		
+		log.debug("rest request to get Review");
+		
+			return new ResponseEntity<>(new ResultStatus("Success","Review Fetched", revRepo.findAllByItemId(id)),HttpStatus.OK);	
 		
 	}
 	
@@ -109,7 +125,7 @@ public class ReviewResource {
 		try {
 			User user = userRepo.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
 			
-			return new ResponseEntity<>(new ResultStatus("Success","Review Created", revRepo.findOneByUserIdAndItemIdAndType(user.getId(), id, type).get()),HttpStatus.OK);	
+			return new ResponseEntity<>(new ResultStatus("Success","Review Fetched", revRepo.findOneByUserIdAndItemIdAndType(user.getId(), id, type).get()),HttpStatus.OK);	
 		}catch(Exception a) {
 			return new ResponseEntity<>(new ResultStatus("Error","Please Login"),HttpStatus.BAD_REQUEST);	
 		}

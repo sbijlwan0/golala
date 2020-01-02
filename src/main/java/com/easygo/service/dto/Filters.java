@@ -8,7 +8,7 @@ public class Filters {
 	
 	private double longitude;
 	
-	private double distance;
+	private double distance=10;
 	
 	private String category;
 	

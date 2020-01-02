@@ -150,6 +150,9 @@ public class OrderResource {
 			case "Picked":
 				if (order.getVendorOtp().equalsIgnoreCase(otp)) {
 					order.setStatus(status);
+					order.getItems().forEach(pro->{
+						pro.setStatus("Picked");
+					});
 //					push.sendOrderPickedPush(orgRepo.findById(order.getOrgId()).get().getVendor().getFcmTokens(), order);
 					break;
 				}
@@ -159,6 +162,9 @@ public class OrderResource {
 				if (order.getCustomerOtp().equalsIgnoreCase(otp)) {
 					order.setStatus(status);
 					order.setDeliveryTime(Instant.now());
+					order.getItems().forEach(pro->{
+						pro.setStatus("Delivered");
+					});
 //					push.sendOrderPickedPush(userRepo.findById(order.getUserId()).get().getFcmTokens(), order);
 					break;
 				}
@@ -188,9 +194,8 @@ public class OrderResource {
 		if (ids.size() == 0 || ids.isEmpty()) {
 			if (!order.getStatus().equalsIgnoreCase("Cancelled"))
 				order.setStatus("Cancelled");
-			for (ProductDTO pro : order.getItems()) {
-				ids.add(pro.getId());
-			}
+			order.getItems().forEach(pro->ids.add(pro.getId()));
+
 		}
 
 		order = updateProduct(order, ids);

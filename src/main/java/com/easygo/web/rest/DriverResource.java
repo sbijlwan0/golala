@@ -113,9 +113,9 @@ public class DriverResource {
 				return new ResponseEntity<>(new ResultStatus("Error", "You are not a golala driver"), HttpStatus.BAD_REQUEST);
 			
 			
-			List<Order>orders=orderRepo.findByDriverAssignedAndStatusAndLocationNear(false, "processing", new Point(filter.getLatitude(),
+			List<Order>orders=orderRepo.findByDriverAssignedAndStatusLikeIgnoreCaseAndLocationNear(false, "processing", new Point(filter.getLatitude(),
 					filter.getLongitude()),
-			new Distance(7, Metrics.KILOMETERS));
+			new Distance(filter.getDistance(), Metrics.KILOMETERS));
 			
 			return new ResponseEntity<>(new ResultStatus("Success", "orders Fetched",orders), HttpStatus.OK);
 			

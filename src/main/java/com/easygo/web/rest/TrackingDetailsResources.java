@@ -78,7 +78,7 @@ public class TrackingDetailsResources {
 	public ResponseEntity<?> getTrackingLocation(@PathVariable("driverId")String driverId){
 		
 		if(!userRepo.findById(driverId).isPresent())
-			return new ResponseEntity<>(new ResultStatus("Error", "User Not Found"), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new ResultStatus("Error", "Driver Not Found"), HttpStatus.BAD_REQUEST);
 			
 		User user=userRepo.findById(driverId).get();
 		

@@ -32,8 +32,20 @@ public class Review extends AbstractAuditingEntity implements Serializable {
     
     private double rating;
     
+    private boolean approved=true;
     
     
+    
+
+    
+    
+	public boolean isApproved() {
+		return approved;
+	}
+
+	public void setApproved(boolean approved) {
+		this.approved = approved;
+	}
 
 	public String getId() {
 		return id;
