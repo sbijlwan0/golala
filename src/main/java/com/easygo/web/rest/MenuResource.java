@@ -1,5 +1,7 @@
 package com.easygo.web.rest;
 
+import java.util.ArrayList;
+
 import javax.validation.Valid;
 
 import org.slf4j.Logger;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.easygo.domain.Menu;
 import com.easygo.repository.MenuRepository;
+import com.easygo.service.dto.Item;
 import com.easygo.service.dto.ResultStatus;
 
 import io.undertow.util.BadRequestException;
@@ -81,7 +84,12 @@ public class MenuResource {
 		if(!menuRepo.findByOrgId(orgId).isPresent())
 			return new ResponseEntity<>(new ResultStatus("Success","Menu Not Found",new Menu()),HttpStatus.OK);
 		
-		return new ResponseEntity<>(new ResultStatus("Success","Menu fetched",menuRepo.findByOrgId(orgId).get()),HttpStatus.OK);
+		Menu menu=menuRepo.findByOrgId(orgId).get();
+		
+		if(null==menu.getItemList())
+			menu.setItemList(new ArrayList<Item>());
+		
+		return new ResponseEntity<>(new ResultStatus("Success","Menu fetched",menu),HttpStatus.OK);
 	}
 	
 	

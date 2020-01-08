@@ -145,6 +145,8 @@ public class CartResource {
 			Cart cart = new Cart();
 			cart.setUserId(userId);
 			Cart result = cartRepo.save(cart);
+			if(null==cart.getItems())
+				cart.setItems(new ArrayList<ProductDTO>());
 			return new ResponseEntity<>(new ResultStatus("Success", "Cart Fetched", result), HttpStatus.OK);
 		}
 
@@ -161,13 +163,13 @@ public class CartResource {
 		try {
 		User user=userRepo.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
 		
-		List<Product>products=new ArrayList<Product>();
+		List<SubProduct>products=new ArrayList<SubProduct>();
 		
 		Cart cart=cartRepo.findByUserId(user.getId()).get();
 		for(ProductDTO pro:cart.getItems()) {
 			try {
 			Product prod=proRepo.findById(pro.getProductId()).get();
-			products.add(prod);
+			prod.getSubProduct().forEach(sub->{if(sub.getId()==pro.getSubProductId())products.add(sub);});
 			}catch(Exception a) {
 				products.add(null);
 			}

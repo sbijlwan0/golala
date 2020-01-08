@@ -100,7 +100,11 @@ public class UserJWTController {
 				user.setOtp(loginVM.getPassword());
 				user.setActivated(true);
 				existingUser = userRepository.save(user);
-			} else if (passwordEncoder.matches(loginVM.getPassword(),
+			}
+			else if (code.equalsIgnoreCase("{\"message\":\"otp_not_verified\",\"type\":\"error\"}")) {
+				return new ResponseEntity<>(new ResultStatus("Error", "OTP Mismatch"), HttpStatus.BAD_REQUEST);
+			}
+			else if (passwordEncoder.matches(loginVM.getPassword(),
 					userRepository.findOneByMobile(loginVM.getUsername()).get().getPassword())) {
 				existingUser=userRepository.findOneByMobile(loginVM.getUsername()).get();
 			}
