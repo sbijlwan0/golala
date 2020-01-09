@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
@@ -55,6 +56,8 @@ public class DriverResource {
 			throws BadRequestException {
 
 		log.debug("rest request to get order by id.");
+		
+		Sort sort = new Sort(Sort.Direction.DESC,"created_date");
 
 		try {
 			User user=userRepo.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
@@ -63,7 +66,7 @@ public class DriverResource {
 				return new ResponseEntity<>(new ResultStatus("Error", "You are not a golala driver"), HttpStatus.BAD_REQUEST);
 
 		return new ResponseEntity<>(
-				new ResultStatus("Success", "Order Fetched", orderRepo.findByDelivererId(user.getId(), PageRequest.of(page, 10))),
+				new ResultStatus("Success", "Order Fetched", orderRepo.findByDelivererId(user.getId(), PageRequest.of(page, 10,sort))),
 				HttpStatus.OK);
 		}catch(Exception e){
 			return new ResponseEntity<>(new ResultStatus("Error", "Please Login"), HttpStatus.BAD_REQUEST);

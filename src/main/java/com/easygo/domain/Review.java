@@ -21,6 +21,8 @@ public class Review extends AbstractAuditingEntity implements Serializable {
     
     private String type="product";
     
+    private String name;
+    
     @NotNull
     private String itemId;
     
@@ -39,6 +41,14 @@ public class Review extends AbstractAuditingEntity implements Serializable {
 
     
     
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
 	public boolean isApproved() {
 		return approved;
 	}

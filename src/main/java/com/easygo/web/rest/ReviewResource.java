@@ -52,7 +52,7 @@ public class ReviewResource {
 			
 			if(revRepo.findOneByUserIdAndItemIdAndType(rev.getUserId(), rev.getItemId(), rev.getType()).isPresent())
 				return new ResponseEntity<>(new ResultStatus("Error","Review by this user already exist"),HttpStatus.BAD_REQUEST);
-			
+			rev.setName(user.getFirstName());
 			revRepo.save(rev);
 			return new ResponseEntity<>(new ResultStatus("Success","Review Created", rev),HttpStatus.CREATED);	
 		}catch(Exception a) {
