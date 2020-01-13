@@ -4,9 +4,11 @@ import com.easygo.config.Constants;
 import com.easygo.domain.Authority;
 import com.easygo.domain.Document;
 import com.easygo.domain.User;
+import com.easygo.domain.Wallet;
 import com.easygo.repository.AuthorityRepository;
 import com.easygo.repository.DocumentRepository;
 import com.easygo.repository.UserRepository;
+import com.easygo.repository.WalletRepository;
 import com.easygo.security.AuthoritiesConstants;
 import com.easygo.security.SecurityUtils;
 import com.easygo.service.dto.UserDTO;
@@ -42,6 +44,9 @@ public class UserService {
     
     @Autowired
     OtpService otpService;
+    
+    @Autowired
+    WalletRepository walletRepo;
 
     private final UserRepository userRepository;
 
@@ -166,7 +171,12 @@ public class UserService {
         doc.setDrivingLic(managedUserVM.getDrivingLic());
         doc.setUserId(newUser.getId());
         documentRepository.save(doc);
-      
+      if(newUser.getAuthorities().contains(authorityRepository.findById(AuthoritiesConstants.VENDOR).get())) {
+    	  Wallet wal=new Wallet();
+    	  wal.setVendorId(newUser.getId());
+    	  walletRepo.save(wal);
+    	  
+      }
 
         
         return newUser;

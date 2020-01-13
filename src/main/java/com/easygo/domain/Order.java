@@ -26,6 +26,8 @@ public class Order extends AbstractAuditingEntity implements Serializable{
     
     private String orderNo;
     
+    private String rootOrderId;
+    
     @NotNull
     private String userId;
     
@@ -69,11 +71,21 @@ public class Order extends AbstractAuditingEntity implements Serializable{
     
     private boolean driverAssigned=false;
     
+    private String paymentStatus="pending";
+    
     
 
     
     
     
+	public String getRootOrderId() {
+		return rootOrderId;
+	}
+
+	public void setRootOrderId(String rootOrderId) {
+		this.rootOrderId = rootOrderId;
+	}
+
 	public boolean isDriverAssigned() {
 		return driverAssigned;
 	}
@@ -250,6 +262,14 @@ public class Order extends AbstractAuditingEntity implements Serializable{
 
 	public void setOrderNo(String orderNo) {
 		this.orderNo = orderNo;
+	}
+
+	public String getPaymentStatus() {
+		return paymentStatus;
+	}
+
+	public void setPaymentStatus(String paymentStatus) {
+		this.paymentStatus = paymentStatus;
 	}
     
     

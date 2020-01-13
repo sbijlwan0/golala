@@ -97,6 +97,9 @@ message:
 fcm:
   key: AAAAp7AYKV8:APA91bGNbFLx8FgqKdNRCFasu-XgxAXGPefzIFa1qL5IuDHl3xpm9nagRdnt9AD1K3r8iznRB870Qsm4FD4BXENaQswcdMqVwtIt7Ft1FtMgI-d8_c7UrOY_bi8ileZui5npT94xp2Z9
   api: https://fcm.googleapis.com/fcm/send
+
+paytm:
+  mkey: HBM7_YeX8XgAabye
 # ===================================================================
 # Application specific properties
 # Add your own application properties here, see the ApplicationProperties class

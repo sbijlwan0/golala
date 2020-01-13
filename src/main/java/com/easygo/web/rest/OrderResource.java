@@ -2,15 +2,18 @@ package com.easygo.web.rest;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
@@ -32,22 +35,30 @@ import org.springframework.web.bind.annotation.RestController;
 import com.easygo.domain.Cart;
 import com.easygo.domain.Order;
 import com.easygo.domain.Organisation;
+import com.easygo.domain.Payment;
 import com.easygo.domain.Product;
+import com.easygo.domain.SequenceGenerator;
 import com.easygo.domain.User;
+import com.easygo.domain.Wallet;
 import com.easygo.repository.AuthorityRepository;
 import com.easygo.repository.CartRepository;
 import com.easygo.repository.OrderRepository;
 import com.easygo.repository.OrganisationRepository;
+import com.easygo.repository.PaymentRepository;
 import com.easygo.repository.ProductRepository;
+import com.easygo.repository.SequenceGeneratorRepository;
 import com.easygo.repository.UserRepository;
+import com.easygo.repository.WalletRepository;
 import com.easygo.security.AuthoritiesConstants;
 import com.easygo.security.SecurityUtils;
 import com.easygo.service.PushService;
+import com.easygo.service.dto.ChecksumResponse;
 import com.easygo.service.dto.Item;
 import com.easygo.service.dto.ProductDTO;
 import com.easygo.service.dto.ResultStatus;
 import com.easygo.service.dto.SubProduct;
 import com.easygo.service.util.RandomUtil;
+import com.paytm.pg.merchant.CheckSumServiceHelper;
 
 import io.undertow.util.BadRequestException;
 
@@ -80,6 +91,18 @@ public class OrderResource {
 
 	@Autowired
 	OrganisationRepository orgRepo;
+	
+	@Autowired
+	SequenceGeneratorRepository sequence;
+	
+	@Autowired
+	PaymentRepository paymentRepo;
+	
+	@Value("${paytm.mkey}")
+	private String MercahntKey;
+	
+	@Autowired
+	WalletRepository walRepo;
 
 	@PostMapping("/order")
 	public ResponseEntity<?> placeOrder(@Valid @RequestBody Order order) throws BadRequestException {
@@ -88,6 +111,19 @@ public class OrderResource {
 
 		if (null != order.getId() || order.isReturnOrder())
 			throw new BadRequestException("Invalid Order.");
+		
+		SequenceGenerator seq=new SequenceGenerator();
+		if(sequence.findOneByType("order").isPresent()) {
+			seq=sequence.findOneByType("order").get();
+			order.setRootOrderId(String.valueOf((Long.valueOf(seq.getSequence())+1)));
+			seq.setSequence(order.getRootOrderId());
+		}
+		else {
+			seq.setType("order");
+			seq.setSequence(String.valueOf(new Date().getTime()));
+			order.setRootOrderId(seq.getSequence());
+		}
+		sequence.save(seq);
 
 		Order or=validateItemList(order);
 
@@ -311,6 +347,93 @@ public class OrderResource {
 				new ResultStatus("Success", "Order Fetched", orderRepo.findAllByOrgIdIn(ids, PageRequest.of(page, 10,sort))),
 				HttpStatus.OK);
 	}
+	
+	
+	@PostMapping("/getChecksum")
+		public ChecksumResponse generateChecksum(@RequestBody TreeMap<String,String> paramMap ) throws BadRequestException {
+		
+		if(paymentRepo.findOneByRootOrderIdAndSuccessIsTrue(paramMap.get("ORDERID")).isPresent())
+			throw new BadRequestException("Payment For This Order Already Exist");
+		
+			ChecksumResponse check=new ChecksumResponse();
+		try{
+			check.setChecksum(CheckSumServiceHelper.getCheckSumServiceHelper().genrateCheckSum(MercahntKey, paramMap));
+			
+			
+			System.out.println("Paytm Payload: "+ check.getChecksum());
+			
+			}catch(Exception e) {
+				// TODO Auto-generated catch block
+				check.setChecksum(e.toString());
+				e.printStackTrace();
+			}
+		
+		return check;
+		}
+	
+	
+	@PostMapping("/verifyChecksum")
+	public ResponseEntity<?> verifyChecksum(@RequestBody TreeMap<String,String> mapData) {
+		
+		try {
+			User user=userRepo.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
+			
+			List<Order> orders=new ArrayList<Order>();	
+		String paytmChecksum = "";
+		Payment pay=new Payment();
+		pay.setUserId(user.getId());
+		pay.setParams(mapData);
+
+		
+		TreeMap<String, String> paytmParams = new  TreeMap<String,String>();
+		
+		for (Map.Entry<String, String> entry : mapData.entrySet())
+		{   
+		    if(entry.getKey().equalsIgnoreCase("CHECKSUMHASH")){
+				paytmChecksum = entry.getValue();
+			}else{
+				paytmParams.put(entry.getKey(), entry.getValue());
+				if(entry.getKey().equalsIgnoreCase("ORDERID")) 
+					pay.setRootOrderId(entry.getValue());
+				
+			}
+		}
+		
+		boolean isValideChecksum = false;
+		System.out.println(paytmParams);
+		try{
+			
+			isValideChecksum = CheckSumServiceHelper.getCheckSumServiceHelper().verifycheckSum(MercahntKey, paytmParams,paytmChecksum);
+			
+			System.out.println(isValideChecksum);
+			pay.setSuccess(isValideChecksum);
+			paymentRepo.save(pay);
+			orders=orderRepo.findAllByRootOrderId(pay.getRootOrderId());
+			if(isValideChecksum) {
+				
+				orders.forEach(o->{
+					o.setPaymentStatus("paid");
+					orderRepo.save(o);
+					Wallet wal=new Wallet();
+					try {
+					wal=walRepo.findOneByVendorId(orgRepo.findById(o.getOrgId()).get().getVendorId()).get();
+					}catch(Exception e){
+						wal.setVendorId(orgRepo.findById(o.getOrgId()).get().getVendorId());
+					}
+					wal.setAmount(wal.getAmount()+o.getPrice());
+					wal.setLastModifiedDate(Instant.now());
+					walRepo.save(wal);});
+			}
+				
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return new ResponseEntity<>(new ResultStatus("Success", "Payment Successfull",orders), HttpStatus.OK);
+		}catch(Exception e){
+			return new ResponseEntity<>(new ResultStatus("Error", "Please Login"), HttpStatus.BAD_REQUEST);
+		}
+	}
+	
 
 	public Order validateItemList(Order order) throws BadRequestException {
 		double price = 0;
@@ -431,6 +554,19 @@ public class OrderResource {
 		List<String> orgIds = new ArrayList<>();
 		List<Order> orders = new ArrayList<Order>();
 		List<Order> forder = new ArrayList<Order>();
+		Long on;
+		SequenceGenerator seq=new SequenceGenerator();
+		if(sequence.findOneByType("orderNo").isPresent()) {
+			seq=sequence.findOneByType("orderNo").get();
+			on=Long.valueOf(seq.getSequence())+1;
+			seq.setSequence(String.valueOf(on));
+		}
+		else {
+			seq.setType("orderNo");
+			on=new Date().getTime();
+			seq.setSequence(String.valueOf(on));
+		}
+		
 
 		for (ProductDTO product : order.getItems()) {
 
@@ -441,6 +577,7 @@ public class OrderResource {
 			o.setDeliveryAddress(order.getDeliveryAddress());
 			o.setCouponCode(order.getCouponCode());
 			o.setDiscount(order.getDiscount());
+			o.setRootOrderId(order.getRootOrderId());
 			o.setDiscountedAmount(order.getDiscountedAmount() / order.getItems().size());
 			o.setUserId(order.getUserId());
 			o.setPrice(product.getDiscountPrice());
@@ -451,10 +588,10 @@ public class OrderResource {
 
 			o.setVendorOtp(RandomUtil.generateOTP());
 			
-			do {
-			o.setOrderNo(RandomUtil.generateOrderNo());
+			o.setOrderNo(String.valueOf(on+=1));
+			seq.setSequence(o.getOrderNo());
 
-			}while (orderRepo.findOneByOrderNo(o.getOrderNo()).isPresent());
+			
 
 
 			orders.add(o);
@@ -485,23 +622,22 @@ public class OrderResource {
 					o.setPrice(o.getPrice() + or.getPrice());
 					o.setOrgId(id);
 					o.setItems(product);
-
+					o.setRootOrderId(or.getRootOrderId());
 					o.setCustomerOtp(or.getCustomerOtp());
 
 					o.setVendorOtp(or.getVendorOtp());
 					try {
 					o.setOrderNo(or.getOrderNo());
 					}catch(Exception a) {
-						do {
-							o.setOrderNo(RandomUtil.generateOrderNo());
-
-							}while (orderRepo.findOneByOrderNo(o.getOrderNo()).isPresent());
+						o.setOrderNo(String.valueOf(on+=1));
+						seq.setSequence(o.getOrderNo());
 					}
 
 				}
 			}
 			forder.add(orderRepo.save(o));
 		}
+		sequence.save(seq);
 		return forder;
 	}
 

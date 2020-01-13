@@ -10,6 +10,18 @@
     <name>Easygo</name>
 
     <repositories>
+    <!--paytm repositories  -->
+
+      <!--   <repository>
+            <id>my-repo1</id>
+            <url>https://artifactorypg.paytm.in/artifactory/libs-release</url>
+        </repository> -->
+        
+<!--          <repository>
+            <id>my-repo2</id>
+            <url>https://repo1.maven.org/maven2/</url>
+        </repository> -->
+    
         <!-- jhipster-needle-maven-repository -->
     </repositories>
 
@@ -276,6 +288,18 @@
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-core</artifactId>
         </dependency>
+        
+       <!--  paytm dependency -->
+       
+	    <dependency>
+	        <groupId>com.paytm.pg</groupId>
+	        <artifactId>paytm-pg</artifactId>
+	        <version>0.0.1</version>
+		    <scope>system</scope>
+		    <systemPath>${project.basedir}/lib/paytm.jar</systemPath>
+	    </dependency>
+        
+        
         <!-- jhipster-needle-maven-add-dependency -->
     </dependencies>
 
