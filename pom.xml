@@ -12,15 +12,10 @@
     <repositories>
     <!--paytm repositories  -->
 
-      <!--   <repository>
-            <id>my-repo1</id>
-            <url>https://artifactorypg.paytm.in/artifactory/libs-release</url>
-        </repository> -->
-        
-<!--          <repository>
-            <id>my-repo2</id>
-            <url>https://repo1.maven.org/maven2/</url>
-        </repository> -->
+     	<repository>
+            <id>Local project repo</id>
+            <url>file://${basedir}/libs</url>
+        </repository>
     
         <!-- jhipster-needle-maven-repository -->
     </repositories>
@@ -295,8 +290,8 @@
 	        <groupId>com.paytm.pg</groupId>
 	        <artifactId>paytm-pg</artifactId>
 	        <version>0.0.1</version>
-		    <scope>system</scope>
-		    <systemPath>${project.basedir}/lib/paytm.jar</systemPath>
+		 <!--    <scope>system</scope> -->
+		   <!--  <systemPath>${project.basedir}/lib/paytm.jar</systemPath> -->
 	    </dependency>
         
         

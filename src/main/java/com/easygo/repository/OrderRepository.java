@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -30,7 +31,7 @@ public interface OrderRepository extends MongoRepository<Order,String> {
 	List<Order> findAllByRootOrderId(@Param("rootOrderId")String rootOrderId);
 	
 	List<Order> findByDriverAssignedAndStatusLikeIgnoreCaseAndLocationNear(@Param("driverAssigned") boolean driverAssigned,@Param("status")String status,
-			@Param("point") Point point, @Param("d") Distance d);
+			@Param("point") Point point, @Param("d") Distance d,Sort sort);
 	
 	Page<Order> findByReturnOrderAndUserId(@Param("returnOrder")boolean returnOrder, @Param("userId")String userId, Pageable pageable);
 	

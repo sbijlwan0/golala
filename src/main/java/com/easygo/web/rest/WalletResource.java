@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.easygo.domain.Wallet;
 import com.easygo.repository.WalletRepository;
 import com.easygo.service.dto.ResultStatus;
 
@@ -43,7 +44,14 @@ public class WalletResource {
 	public ResponseEntity<?> getAllWalletByVendorId(@PathVariable("id")String id){
 		log.debug("rest request to get wallet by vendorId",id);
 		
-		return new ResponseEntity<>(new ResultStatus("Success","Wallet Fetched",walletRepo.findOneByVendorId(id).get()),HttpStatus.OK);
+		Wallet wal=new Wallet();
+		if(!walletRepo.findOneByVendorId(id).isPresent())
+			wal=walletRepo.findOneByVendorId(id).get();
+		
+		wal.setVendorId(id);
+		walletRepo.save(wal);
+		
+		return new ResponseEntity<>(new ResultStatus("Success","Wallet Fetched",wal),HttpStatus.OK);
 	}
 
 }

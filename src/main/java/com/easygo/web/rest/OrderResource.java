@@ -412,6 +412,7 @@ public class OrderResource {
 			if(isValideChecksum) {
 				
 				orders.forEach(o->{
+					if(!o.getStatus().equalsIgnoreCase("Cancelled")) {
 					o.setPaymentStatus("paid");
 					orderRepo.save(o);
 					Wallet wal=new Wallet();
@@ -422,7 +423,11 @@ public class OrderResource {
 					}
 					wal.setAmount(wal.getAmount()+o.getPrice());
 					wal.setLastModifiedDate(Instant.now());
-					walRepo.save(wal);});
+					walRepo.save(wal);}
+					});
+			}
+			else {
+				return new ResponseEntity<>(new ResultStatus("Error", "Payment Failed",null), HttpStatus.BAD_REQUEST);
 			}
 				
 		}catch(Exception e){

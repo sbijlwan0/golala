@@ -115,10 +115,11 @@ public class DriverResource {
 			if(!user.getAuthorities().contains(authRepo.findById(AuthoritiesConstants.DELIVERER).get()))
 				return new ResponseEntity<>(new ResultStatus("Error", "You are not a golala driver"), HttpStatus.BAD_REQUEST);
 			
+			Sort sort = new Sort(Sort.Direction.DESC,"created_date");
 			
 			List<Order>orders=orderRepo.findByDriverAssignedAndStatusLikeIgnoreCaseAndLocationNear(false, "processing", new Point(filter.getLatitude(),
 					filter.getLongitude()),
-			new Distance(filter.getDistance(), Metrics.KILOMETERS));
+			new Distance(filter.getDistance(), Metrics.KILOMETERS),sort);
 			
 			return new ResponseEntity<>(new ResultStatus("Success", "orders Fetched",orders), HttpStatus.OK);
 			
