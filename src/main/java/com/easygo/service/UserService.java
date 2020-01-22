@@ -258,7 +258,12 @@ public class UserService {
                 user.setLogin(userDTO.getLogin().toLowerCase());
                 user.setFirstName(userDTO.getFirstName());
 //                user.setLastName(userDTO.getLastName());
+                try {
                 user.setEmail(userDTO.getEmail().toLowerCase());
+                }catch(Exception a) {}
+                try {
+                    user.setMobile(userDTO.getMobile());
+                    }catch(Exception a) {}
                 user.setImageUrl(userDTO.getImageUrl());
                 user.setActivated(userDTO.isActivated());
                 user.setLangKey(userDTO.getLangKey());
@@ -279,7 +284,7 @@ public class UserService {
             .map(UserDTO::new);
     }
     
-   public UserDTO getUserDTO(User user) {
+   public Optional<UserDTO> getUserDTO(User user) {
 	   
 	   UserDTO userDTO=new UserDTO();
 	   userDTO.setId(user.getId());
@@ -296,7 +301,7 @@ public class UserService {
 	   for(Authority auth:user.getAuthorities())
 		   authorities.add(auth.getName());
 	   userDTO.setAuthorities(authorities);
-	   return userDTO;
+	   return Optional.of(userDTO);
    }
 
     public void deleteUser(String login) {

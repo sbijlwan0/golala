@@ -78,6 +78,7 @@ public class UserDTO {
         // Empty constructor needed for Jackson.
     }
 
+	
     public UserDTO(User user) {
         this.id = user.getId();
         this.login = user.getLogin();
@@ -236,4 +237,7 @@ public class UserDTO {
             ", authorities=" + authorities +
             "}";
     }
+    
+    
+    
 }

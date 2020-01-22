@@ -1,6 +1,7 @@
 package com.easygo.web.rest;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Optional;
 
 import javax.validation.Valid;
 
@@ -134,9 +135,9 @@ public class UserJWTController {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.add(JWTFilter.AUTHORIZATION_HEADER, "Bearer " + jwt);
 
-		UserDTO user=userService.getUserDTO(existingUser);	
+		Optional<UserDTO> user=userService.getUserDTO(existingUser);	
 		
-		return new ResponseEntity<>(new JWTToken(jwt, user), httpHeaders, HttpStatus.OK);
+		return new ResponseEntity<>(new JWTToken(jwt, user.get()), httpHeaders, HttpStatus.OK);
 	}
 
 	/**
