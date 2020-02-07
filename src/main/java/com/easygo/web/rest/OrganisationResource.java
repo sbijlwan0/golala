@@ -1,5 +1,7 @@
 package com.easygo.web.rest;
 
+import java.util.List;
+
 import javax.validation.Valid;
 
 import org.slf4j.Logger;
@@ -23,8 +25,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.easygo.domain.Organisation;
+import com.easygo.domain.Product;
 import com.easygo.repository.AuthorityRepository;
 import com.easygo.repository.OrganisationRepository;
+import com.easygo.repository.ProductRepository;
 import com.easygo.repository.UserRepository;
 import com.easygo.security.AuthoritiesConstants;
 import com.easygo.service.MailService;
@@ -44,6 +48,9 @@ public class OrganisationResource {
 
 	@Autowired
 	UserRepository userRepo;
+	
+	@Autowired
+	ProductRepository proRepo;
 
 	@Autowired
 	MailService mailService;
@@ -104,8 +111,17 @@ public class OrganisationResource {
 		Organisation org = orgRepo.findById(id).get();
 		if(org.isActivated())
 			org.setActivated(false);
-		else
+		else 
 			org.setActivated(true);
+		
+		
+			List<Product>products=proRepo.findAllByOrganisationId(org.getId());
+			
+			products.forEach(pro->{
+				pro.setActive(org.isActivated());
+				proRepo.save(pro);
+			});
+		
 
 		Organisation result = orgRepo.save(org);
 

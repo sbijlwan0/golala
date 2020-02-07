@@ -37,7 +37,17 @@ public class OtpService {
 	    public void sendOtp(String mobile,int n) throws UnsupportedEncodingException {
 	    	
 			
-	    	log.debug("Sending Otp to : " +mobile);
+	    	log.debug("Sending Otp to : "+mobile);
+	    	System.out.println(mobile);
+	    	String country="91";
+	    	if(mobile.contains("+")) {
+	    		if(mobile.substring(0, 2).equalsIgnoreCase("+1")) {
+	    			country="1";}
+	    		else if(!mobile.substring(0, 3).equalsIgnoreCase("+91")) {
+	    			country="0";}
+	    	}
+	    	
+	    	log.debug(mobile+" "+country);
 	    	
 	    	RestTemplate restTemplate = new RestTemplate();
 	      	HttpHeaders headers = new HttpHeaders();
@@ -50,6 +60,7 @@ public class OtpService {
 	      		map.add("message", loginMessage);
 	    	map.add("sender", sender);
 	    	map.add("mobile", mobile);
+	    	map.add("country", country);
 	    	
 	    	HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
 
@@ -61,7 +72,16 @@ public class OtpService {
 	    
 		@Async
 	    public void resendOtp(String mobile) throws UnsupportedEncodingException {
-	    	log.debug("Resending Otp to ", mobile);
+	    	log.debug("Resending Otp to "+mobile);
+	    	
+//	    	String country="91";
+//	    	if(mobile.contains("+")) {
+//	    		if(mobile.substring(0, 2).equalsIgnoreCase("+1")) {
+//	    			country="1";}
+//	    		else if(mobile.substring(0, 3).equalsIgnoreCase("+91")) {
+//	    			country="0";}
+//	    	}
+	    	
 	    	RestTemplate restTemplate = new RestTemplate();
 	      	HttpHeaders headers = new HttpHeaders();
 	      	headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -80,7 +100,16 @@ public class OtpService {
 	    
 		
 	    public String verifyOtp( String mobile, String otp) throws UnsupportedEncodingException {
-	    	log.debug("verifying Otp on ", mobile);
+	    	log.debug("verifying Otp on "+mobile);
+	    	
+//	    	String country="91";
+//	    	if(mobile.contains("+")) {
+//	    		if(mobile.substring(0, 2).equalsIgnoreCase("+1")) {
+//	    			country="1";}
+//	    		else if(mobile.substring(0, 3).equalsIgnoreCase("+91")) {
+//	    			country="0";}
+//	    	}
+	    	
 	    	RestTemplate restTemplate = new RestTemplate();
 	      	HttpHeaders headers = new HttpHeaders();
 	      	headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -88,6 +117,7 @@ public class OtpService {
 	      	MultiValueMap<String, String> map= new LinkedMultiValueMap<String, String>();
 	      	map.add("mobile", mobile);
 	    	map.add("otp", otp);
+//	    	map.add("country",country);
 	    	//map.add("mobile", userDTO.getMobileNo());
 	    	
 

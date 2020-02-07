@@ -16,6 +16,8 @@ public interface ProductRepository extends MongoRepository<Product,String>{
 	
 	Page<Product> findAllByOrganisationId(@Param("organisationId")String orgId,Pageable pageable);
 	
+	List<Product> findAllByOrganisationId(@Param("organisationId")String orgId);
+	
 	Page<Product> findAllByActiveIsTrueAndOrganisationId(@Param("organisationId")String orgId,Pageable pageable);
 	
 	Page<Product> findAllByActiveIsTrueAndCategory(@Param("category")String category,Pageable pageable);

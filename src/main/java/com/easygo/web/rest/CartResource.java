@@ -169,7 +169,9 @@ public class CartResource {
 		for(ProductDTO pro:cart.getItems()) {
 			try {
 			Product prod=proRepo.findById(pro.getProductId()).get();
-			prod.getSubProduct().forEach(sub->{if(sub.getId()==pro.getSubProductId())products.add(sub);});
+			prod.getSubProduct().forEach(sub->{
+				if(sub.getId()==pro.getSubProductId())
+					products.add(sub);});
 			}catch(Exception a) {
 				products.add(null);
 			}

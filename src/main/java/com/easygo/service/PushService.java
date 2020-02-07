@@ -141,7 +141,7 @@ public class PushService {
 				
 				 HashMap<String, String> data = new HashMap<String, String>();
 				 data.put("title", title+"  - New Message:");
-				 data.put("body", "Order with order id-"+order.getId()+" for "+order.getItems().get(0).getName()+" has been placed.");
+				 data.put("body", "Order with order id-"+order.getOrderNo()+" for "+order.getItems().get(0).getName()+" has been placed.");
 				 data.put("notificationId", String.valueOf(RandomUtils.nextInt()));
 				 
 					 HashMap<String, Object> body = new HashMap<String, Object>();
@@ -188,7 +188,7 @@ public class PushService {
 				
 				 HashMap<String, String> data = new HashMap<String, String>();
 				 data.put("title", title+"  - New Message:");
-				 data.put("body", "Otp for Order with order id-"+order.getId()+" for "+order.getItems().get(0).getName()+" has been verified Successfully.");
+				 data.put("body", "Otp for Order with order id-"+order.getOrderNo()+" for "+order.getItems().get(0).getName()+" has been verified Successfully.");
 				 data.put("notificationId", String.valueOf(RandomUtils.nextInt()));
 				 
 					 HashMap<String, Object> body = new HashMap<String, Object>();

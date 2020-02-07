@@ -91,7 +91,7 @@ jhipster:
       queue-size: 512
 
 message:
-  key: 248280ANqUJ74LU5bf42a88
+  key: 298539AFsV5sV1L5e39625fP1
   api: https://control.msg91.com/api/
 
 fcm:

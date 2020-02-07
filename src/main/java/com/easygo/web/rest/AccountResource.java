@@ -217,7 +217,7 @@ public class AccountResource {
 		} else if (mobile.contains("@")) {
 			if (flag.equalsIgnoreCase("customer")) {
 				if (userRepository.findOneByEmailIgnoreCase(mobile).isPresent()) {
-					if (userRepository.findOneByMobile(mobile).get().getAuthorities()
+					if (userRepository.findOneByEmailIgnoreCase(mobile).get().getAuthorities()
 							.contains(authorityRepository.findById(AuthoritiesConstants.CUSTOMER).get())) {
 						User user = userRepository.findOneByEmailIgnoreCase(mobile).get();
 						String otp = RandomUtil.generateOTP();

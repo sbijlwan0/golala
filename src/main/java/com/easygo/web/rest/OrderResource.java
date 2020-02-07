@@ -111,19 +111,6 @@ public class OrderResource {
 
 		if (null != order.getId() || order.isReturnOrder())
 			throw new BadRequestException("Invalid Order.");
-		
-		SequenceGenerator seq=new SequenceGenerator();
-		if(sequence.findOneByType("order").isPresent()) {
-			seq=sequence.findOneByType("order").get();
-			order.setRootOrderId(String.valueOf((Long.valueOf(seq.getSequence())+1)));
-			seq.setSequence(order.getRootOrderId());
-		}
-		else {
-			seq.setType("order");
-			seq.setSequence(String.valueOf(new Date().getTime()));
-			order.setRootOrderId(seq.getSequence());
-		}
-		sequence.save(seq);
 
 		Order or=validateItemList(order);
 
@@ -135,20 +122,38 @@ public class OrderResource {
 		List<ProductDTO> items = new ArrayList<>();
 		cart.setItems(items);
 		cartRepo.save(cart);
+		
+		orders.forEach(o->{
+		if(!o.getStatus().equalsIgnoreCase("Cancelled")) {
+		o.setPaymentStatus("paid");
+		orderRepo.save(o);
+		Wallet wal=new Wallet();
+		try {
+		wal=walRepo.findOneByVendorId(orgRepo.findById(o.getOrgId()).get().getVendorId()).get();
+		}catch(Exception e){
+			wal.setVendorId(orgRepo.findById(o.getOrgId()).get().getVendorId());
+		}
+		wal.setAmount(wal.getAmount()+o.getPrice());
+		wal.setLastModifiedDate(Instant.now());
+		walRepo.save(wal);}
+		});
 
-//		for (Order or : orders) {
-//
-//			push.sendOrderPlacedPush(userRepo.findById(or.getUserId()).get().getFcmTokens(), or);
-//			push.sendOrderPlacedPush(orgRepo.findById(or.getOrgId()).get().getVendor().getFcmTokens(), or);
-//			List<User> users = userRepo.findAllByAuthoritiesContainsAndLiveLocationNear(
-//					authRepo.findById(AuthoritiesConstants.DELIVERER).get(),
-//					new Point(orgRepo.findById(or.getOrgId()).get().getLocation().getX(),
-//							orgRepo.findById(or.getOrgId()).get().getLocation().getY()),
-//					new Distance(7, Metrics.KILOMETERS));
-//
-//			for (User user : users)
-//				push.sendOrderPlacedPush(user.getFcmTokens(), or);
-//		}
+		for (Order o : orders) {
+			try {
+			push.sendOrderPlacedPush(userRepo.findById(o.getUserId()).get().getFcmTokens(), o);
+			push.sendOrderPlacedPush(orgRepo.findById(o.getOrgId()).get().getVendor().getFcmTokens(), o);
+			List<User> users = userRepo.findAllByAuthoritiesContainsAndLiveLocationNear(
+					authRepo.findById(AuthoritiesConstants.DELIVERER).get(),
+					new Point(orgRepo.findById(o.getOrgId()).get().getLocation().getX(),
+							orgRepo.findById(o.getOrgId()).get().getLocation().getY()),
+					new Distance(7, Metrics.KILOMETERS));
+
+			for (User user : users)
+				push.sendOrderPlacedPush(user.getFcmTokens(), o);
+			}catch(Exception a) {
+				a.printStackTrace();
+			}
+		}
 
 		return new ResponseEntity<>(new ResultStatus("Success", "Order Placed", orders), HttpStatus.CREATED);
 	}
@@ -250,6 +255,27 @@ public class OrderResource {
 	}
 	
 	
+	@GetMapping("/getRootOrderId")
+	public ResponseEntity<?> getRootOrderId(){
+		log.debug("generating root order id");
+		
+		String id="";
+		
+		SequenceGenerator seq=new SequenceGenerator();
+		if(sequence.findOneByType("order").isPresent()) {
+			seq=sequence.findOneByType("order").get();
+			id=String.valueOf((Long.valueOf(seq.getSequence())+1));
+			seq.setSequence(id);
+		}
+		else {
+			seq.setType("order");
+			seq.setSequence(String.valueOf(new Date().getTime()));
+			id=seq.getSequence();
+		}
+		sequence.save(seq);
+		
+		return new ResponseEntity<>(new ResultStatus("Success","root Order Id Generated",id),HttpStatus.OK);
+	}
 
 
 	@GetMapping("/order/{page}")
@@ -350,11 +376,26 @@ public class OrderResource {
 	
 	
 	@PostMapping("/getChecksum")
-		public ChecksumResponse generateChecksum(@RequestBody TreeMap<String,String> paramMap ) throws BadRequestException {
+		public ResponseEntity<?> generateChecksum(@RequestBody TreeMap<String,String> paramMap ) throws BadRequestException {
 		
-		if(paymentRepo.findOneByRootOrderIdAndSuccessIsTrue(paramMap.get("ORDERID")).isPresent())
-			throw new BadRequestException("Payment For This Order Already Exist");
+		try {
+			User user=userRepo.findOneByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
+			
+			Payment pay=new Payment();
+			
+//		if(paymentRepo.findOneByRootOrderIdAndSuccessIsTrue(paramMap.get("ORDERID")).isPresent())
+//			throw new BadRequestException("Payment For This Order Already Exist");
 		
+		for (Map.Entry<String, String> entry : paramMap.entrySet())
+		{   
+				if(entry.getKey().equalsIgnoreCase("ORDER_ID")) 
+					pay.setRootOrderId(entry.getValue());		
+		}
+		
+		pay.setUserId(user.getId());
+		pay.setParams(paramMap);
+//		pay.setRootOrderId(paramMap.get("ORDERID").ge);
+		paymentRepo.save(pay);
 			ChecksumResponse check=new ChecksumResponse();
 		try{
 			check.setChecksum(CheckSumServiceHelper.getCheckSumServiceHelper().genrateCheckSum(MercahntKey, paramMap));
@@ -368,7 +409,10 @@ public class OrderResource {
 				e.printStackTrace();
 			}
 		
-		return check;
+		return new ResponseEntity<>(new ResultStatus("Success","checksum generated",check),HttpStatus.OK);
+				}catch(Exception e){
+			return new ResponseEntity<>(new ResultStatus("Error","Please Login"),HttpStatus.BAD_REQUEST);
+		}
 		}
 	
 	
@@ -380,9 +424,7 @@ public class OrderResource {
 			
 			List<Order> orders=new ArrayList<Order>();	
 		String paytmChecksum = "";
-		Payment pay=new Payment();
-		pay.setUserId(user.getId());
-		pay.setParams(mapData);
+		String rootId="";
 
 		
 		TreeMap<String, String> paytmParams = new  TreeMap<String,String>();
@@ -394,10 +436,17 @@ public class OrderResource {
 			}else{
 				paytmParams.put(entry.getKey(), entry.getValue());
 				if(entry.getKey().equalsIgnoreCase("ORDERID")) 
-					pay.setRootOrderId(entry.getValue());
+					rootId=entry.getValue();
 				
 			}
 		}
+		
+		Sort sort = new Sort(Sort.Direction.DESC,"created_date");
+		
+		List<Payment> payments=paymentRepo.findAllByRootOrderId(rootId,sort);
+		
+		Payment pay=payments.get(0);
+		pay.setParams(paytmParams);
 		
 		boolean isValideChecksum = false;
 		System.out.println(paytmParams);
@@ -408,23 +457,25 @@ public class OrderResource {
 			System.out.println(isValideChecksum);
 			pay.setSuccess(isValideChecksum);
 			paymentRepo.save(pay);
-			orders=orderRepo.findAllByRootOrderId(pay.getRootOrderId());
+//			orders=orderRepo.findAllByRootOrderId(pay.getRootOrderId());
 			if(isValideChecksum) {
 				
-				orders.forEach(o->{
-					if(!o.getStatus().equalsIgnoreCase("Cancelled")) {
-					o.setPaymentStatus("paid");
-					orderRepo.save(o);
-					Wallet wal=new Wallet();
-					try {
-					wal=walRepo.findOneByVendorId(orgRepo.findById(o.getOrgId()).get().getVendorId()).get();
-					}catch(Exception e){
-						wal.setVendorId(orgRepo.findById(o.getOrgId()).get().getVendorId());
-					}
-					wal.setAmount(wal.getAmount()+o.getPrice());
-					wal.setLastModifiedDate(Instant.now());
-					walRepo.save(wal);}
-					});
+				return new ResponseEntity<>(new ResultStatus("Success", "Payment Successfull",pay), HttpStatus.OK);
+				
+//				orders.forEach(o->{
+//					if(!o.getStatus().equalsIgnoreCase("Cancelled")) {
+//					o.setPaymentStatus("paid");
+//					orderRepo.save(o);
+//					Wallet wal=new Wallet();
+//					try {
+//					wal=walRepo.findOneByVendorId(orgRepo.findById(o.getOrgId()).get().getVendorId()).get();
+//					}catch(Exception e){
+//						wal.setVendorId(orgRepo.findById(o.getOrgId()).get().getVendorId());
+//					}
+//					wal.setAmount(wal.getAmount()+o.getPrice());
+//					wal.setLastModifiedDate(Instant.now());
+//					walRepo.save(wal);}
+//					});
 			}
 			else {
 				return new ResponseEntity<>(new ResultStatus("Error", "Payment Failed",null), HttpStatus.BAD_REQUEST);
